@@ -43,7 +43,11 @@ class MetaControl:  # Single control signal for one env step
                     if robot.ee_type == "gripper":
                         position = get_dict(key)["position"]
                         gripper_val = process_gripper_val(
-                            robot_manager, robot, position[0], gripper_eps=0.2, env_idx=env_idx
+                            robot_manager,
+                            robot,
+                            position[0],
+                            gripper_eps=getattr(robot, "gripper_target_step_fraction", 0.2),
+                            env_idx=env_idx,
                         )
                         res[key] = {"position": gripper_val, "velocity": get_dict(key)["velocity"]}
                     else:

@@ -1,6 +1,22 @@
 {
     "dual_x5": {
-        "arm_dim": [6, 6],
-        "ee_dim": [1, 1]
+        "arm_dim": [
+            6,
+            6
+        ],
+        "ee_dim": [
+            1,
+            1
+        ]
+    },
+    "dual_x5_payload_limited": {
+        "arm_dim": [
+            6,
+            6
+        ],
+        "ee_dim": [
+            1,
+            1
+        ]
     }
 }

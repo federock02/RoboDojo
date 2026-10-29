@@ -1,6 +1,7 @@
 import random
 
 from isaacsim.core.api.materials.physics_material import PhysicsMaterial
+from isaacsim.core.api.materials.preview_surface import PreviewSurface
 from isaacsim.core.prims import SingleGeometryPrim, SingleRigidPrim
 from isaacsim.core.simulation_manager import SimulationManager
 from isaacsim.core.utils.prims import get_prim_at_path, is_prim_path_valid
@@ -8,8 +9,9 @@ from isaacsim.core.utils.stage import add_reference_to_stage
 from isaacsim.core.utils.string import find_unique_string_name
 import numpy as np
 from omegaconf import DictConfig
+import omni.kit.commands
 import omni.usd
-from pxr import Gf, Sdf, Usd, UsdGeom
+from pxr import Gf, Sdf, Usd, UsdGeom, UsdShade
 import torch
 
 from env.scene_manager.layout_manager import LayoutManager
@@ -62,8 +64,20 @@ class RigidObject(SingleRigidPrim, SingleGeometryPrim):
         self.default_pos = default_pos
         self.default_ori = default_ori
         self.scale = scale
-        self.mass = min(self.physics_config.get("mass", 0.5), 0.5)
+        # Thesis basket-transport opt-in mass override.
+        # Existing RoboDojo scenes retain the 0.5 kg default cap. A custom
+        # scene must explicitly request and cap an override, keeping this
+        # potentially destabilising capability local to that experiment.
+        requested_mass = float(self.physics_config.get("mass", 0.5))
+        if self.physics_config.get("allow_mass_override", False):
+            mass_cap = float(self.physics_config.get("mass_cap", requested_mass))
+            if mass_cap <= 0:
+                raise ValueError("physics.mass_cap must be positive when overriding object mass")
+        else:
+            mass_cap = 0.5
+        self.mass = min(requested_mass, mass_cap)
         self.visible = self.visual_config.get("visible", True)
+        self.color_material_path = None
 
         self.physics_material_path = find_unique_string_name(
             prim_path + "/physics_material",
@@ -94,10 +108,27 @@ class RigidObject(SingleRigidPrim, SingleGeometryPrim):
             orientation=self.default_ori,
             scale=self.scale,
         )
+        configured_color = self.visual_config.get("color", None)
+        if configured_color is not None:
+            self._apply_color_material(configured_color)
         self._default_linear_velocity = [0.0, 0.0, 0.0]
         self._default_angular_velocity = [0.0, 0.0, 0.0]
 
         self._setup_physics()
+
+    def _apply_color_material(self, color_rgb):
+        """Apply an optional task-scoped color override to a rigid asset."""
+        self.color_material_path = find_unique_string_name(
+            initial_name=self._prim_path + "/Looks/color_material",
+            is_unique_fn=lambda x: not is_prim_path_valid(x),
+        )
+        PreviewSurface(prim_path=self.color_material_path, color=torch.tensor(color_rgb))
+        omni.kit.commands.execute(
+            "BindMaterialCommand",
+            prim_path=self._prim_path,
+            material_path=self.color_material_path,
+            strength=UsdShade.Tokens.strongerThanDescendants,
+        )
 
     def _get_object_transform(self, device=None):
         """

@@ -143,3 +143,28 @@ tasks:
   
   pick_from_conveyor_by_image:
     scene_config: "conveyor"
+  basket_transport_empty:
+    robot_config: "dual_x5_payload_limited"
+    eval_nums: 10
+
+  basket_transport_partial:
+    robot_config: "dual_x5_payload_limited"
+    eval_nums: 10
+
+  basket_transport_overloaded:
+    robot_config: "dual_x5_payload_limited"
+    eval_nums: 10
+  basket_transport_heavy_cubes:
+    robot_config: "dual_x5_payload_limited"
+    eval_nums: 1
+
+  basket_transport_fixed_cube:
+    robot_config: "dual_x5_payload_limited"
+    eval_nums: 1
+  cube_transport_large:
+    robot_config: "dual_x5_payload_limited"
+    eval_nums: 1
+
+  cube_stack_sizes:
+    robot_config: "dual_x5_payload_limited"
+    eval_nums: 1
