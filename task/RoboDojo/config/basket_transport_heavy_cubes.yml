@@ -1,0 +1,117 @@
+Geometry:
+- common:
+    xlim:
+    - 0.19
+    - 0.19
+    ylim:
+    - -0.04
+    - -0.04
+    rotate_rand: false
+    relative_plane: Table
+    scale:
+    - 0.8
+    - 0.8
+    - 0.00625
+    zlim:
+    - -5.0e-05
+    - -5.0e-05
+    margin: 0.0
+  category:
+  - name: checkerboard
+    index:
+    - 0
+  select_mode:
+    nums:
+    - 1
+    mode: unique
+    label:
+    - target_zone
+Rigid:
+- common:
+    xlim:
+    - -0.2
+    - -0.2
+    ylim:
+    - -0.1
+    - -0.1
+    rotate_rand: false
+    relative_plane: Table
+    physics:
+      mass: 0.2
+    visual:
+      color:
+      - 1.0
+      - 0.25
+      - 0.02
+  category:
+  - name: basket_grasp
+    index:
+    - 2
+  select_mode:
+    nums:
+    - 1
+    mode: unique
+    label:
+    - basket
+- common:
+    xlim:
+    - -0.12
+    - 0.12
+    ylim:
+    - -0.065
+    - 0.065
+    zlim:
+    - 0.02
+    - 0.07
+    rotate_rand: false
+    relative_plane: basket
+    margin: 0.005
+    physics:
+      mass: 6.0
+      allow_mass_override: true
+      mass_cap: 6.0
+    scale:
+    - 2.2857142857142856
+    - 2.2857142857142856
+    - 2.2857142857142856
+  category:
+  - name: cube
+    index:
+    - 0
+  select_mode:
+    nums:
+    - 1
+    mode: allow_duplicate
+    label:
+    - payload0
+- common:
+    xlim:
+    - -0.12
+    - 0.12
+    ylim:
+    - -0.065
+    - 0.065
+    zlim:
+    - 0.02
+    - 0.07
+    rotate_rand: false
+    relative_plane: basket
+    margin: 0.005
+    physics:
+      mass: 6.0
+      allow_mass_override: true
+      mass_cap: 6.0
+    scale:
+    - 2.2857142857142856
+    - 2.2857142857142856
+    - 2.2857142857142856
+  category:
+  - name: cube
+    index:
+    - 0
+  select_mode:
+    nums:
+    - 1
+    mode: allow_duplicate
+    label:
+    - payload1

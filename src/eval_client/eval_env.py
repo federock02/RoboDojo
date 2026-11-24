@@ -4,6 +4,7 @@ import importlib
 import inspect
 import json
 import os
+import time
 
 from client_server.ws.model_client import WsModelClient
 import numpy as np
@@ -60,6 +61,11 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             self.policy_name = self.eval_cfg.get("policy_name", None)
             self.additional_info = self.eval_cfg.get("additional_info", "")
             self.eval_seed = self.eval_cfg.get("seed", 0)
+            # RewardManager.step() is required for exact stateful benchmark
+            # scoring. Runtime control excludes its duration and defers its
+            # failures so privileged bookkeeping cannot steer the policy.
+            self._runtime_benchmark_overhead_s = 0.0
+            self._runtime_benchmark_errors = []
             self.physx_monitor_enabled = bool(self.eval_cfg.get("physx_monitor_enabled", False))
             if self.physx_monitor_enabled:
                 from src.eval_client.physx_warning_monitor import (
@@ -355,7 +361,23 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             self.validate_action_dict(action)
             self.take_action_batch([action], env_idx_list=[0])
 
-        def take_action_batch(self, actions_list, env_idx_list=None):
+        def take_action_runtime(self, action):
+            """Apply one action without consulting benchmark termination state.
+
+            The runtime path still validates actions, enforces the simulator
+            step limit, advances reward bookkeeping for later offline scoring,
+            and propagates controller/PhysX faults.  Ground-truth reward and
+            ``end_flag`` values never gate action execution here.
+            """
+            self.validate_action_dict(action)
+            overhead_before = self._runtime_benchmark_overhead_s
+            action_applied = self.take_action_batch([action], env_idx_list=[0], runtime_control=True)
+            return {
+                "action_applied": bool(action_applied),
+                "benchmark_overhead_s": (self._runtime_benchmark_overhead_s - overhead_before),
+            }
+
+        def take_action_batch(self, actions_list, env_idx_list=None, *, runtime_control=False):
             if self.physx_monitor_enabled:
                 self._check_physx_broken_envs()
             control_info_list = []
@@ -365,7 +387,9 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 action = actions_list[idx]
                 self.validate_action_dict(action)
                 action_type = self.get_action_type(action)
-                if self.take_action_cnt[env_idx] == self.step_lim or self.end_flag[env_idx]:
+                if self.take_action_cnt[env_idx] >= self.step_lim:
+                    continue
+                if not runtime_control and self.end_flag[env_idx]:
                     continue
 
                 self.take_action_cnt[env_idx] += 1
@@ -454,7 +478,16 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                         self._check_physx_broken_envs()
                         self._check_endpose_finite(env_idx_list)
 
-            self.reward_manager.step(env_idx_list=env_idx_list)
+            if runtime_control:
+                benchmark_started_at = time.monotonic()
+                try:
+                    self.reward_manager.step(env_idx_list=env_idx_list)
+                except Exception as benchmark_error:
+                    self._runtime_benchmark_errors.append(f"{type(benchmark_error).__name__}: {benchmark_error}")
+                finally:
+                    self._runtime_benchmark_overhead_s += time.monotonic() - benchmark_started_at
+            else:
+                self.reward_manager.step(env_idx_list=env_idx_list)
             if getattr(self, "interact", False):
                 if hasattr(self, "query_support_arm_traj"):
                     for env_idx in env_idx_list:
@@ -462,7 +495,9 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 if hasattr(self, "check_support_arm_stable"):
                     for env_idx in env_idx_list:
                         self.check_support_arm_stable(env_idx=env_idx)
-            self.is_episode_end()
+            if not runtime_control:
+                self.is_episode_end()
+            return bool(control_info_list)
 
         def mark_env_unstable(self, env_idx):
             """Flag an env as unstable so run_eval drops it from the eval set.
@@ -536,7 +571,11 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                         env_idx
                     ][0]
                     if current_position is not None:
-                        interp_count = int(np.floor(interpolation_nums * 0.8))
+                        interp_count = (
+                            int(np.floor(interpolation_nums * 0.8))
+                            if getattr(robot, "interpolate_gripper_targets", True)
+                            else 0
+                        )
 
                         scale = robot.gripper_scale
                         for i in range(interp_count):
@@ -837,6 +876,44 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 self.persist_resume_manifest()
             except Exception as e:
                 print(f"[EvalEnv] persist_resume_manifest after run_eval failed: {e}")
+
+        def evaluate_episode(self):
+            """Finalize ground-truth benchmark results after runtime stops.
+
+            This method is intentionally privileged.  Policies and runtime
+            executors must not call it; the isolated benchmark evaluator calls
+            it only after all planner, verifier, and action control flow ends.
+            """
+            if self._runtime_benchmark_errors:
+                # The policy/runtime has already stopped. Exclude this sample
+                # from benchmark totals rather than turning an evaluator fault
+                # into either a runtime fault or a false-positive success.
+                for env_idx in range(self.num_envs):
+                    self.mark_env_unstable(env_idx)
+                raise RuntimeError(
+                    "benchmark bookkeeping failed during runtime: " + "; ".join(self._runtime_benchmark_errors)
+                )
+            pre_end_flag = deepcopy(self.end_flag)
+            reward_list = self.reward_manager.get_reward(final_check=True)
+            results = []
+            for env_idx in range(self.num_envs):
+                succeeded = bool(reward_list[env_idx] > 1 - 1e-3)
+                self.success[env_idx] = succeeded
+                self.end_flag[env_idx] = True
+                results.append(
+                    {
+                        "env_idx": env_idx,
+                        "success": succeeded,
+                        "reward": float(reward_list[env_idx]),
+                        "action_count": int(self.take_action_cnt[env_idx]),
+                        "action_budget": int(self.step_lim),
+                    }
+                )
+
+            changed = [env_idx for env_idx in range(self.num_envs) if self.end_flag[env_idx] != pre_end_flag[env_idx]]
+            if changed:
+                self.get_obs_batch(env_idx_list=changed, last_frame=True)
+            return results
 
         def is_episode_end(self):
             pre_end_flag = deepcopy(self.end_flag)

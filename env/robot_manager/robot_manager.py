@@ -620,6 +620,20 @@ class RobotManager:
                 )
             )
 
+        # Thesis basket-transport task-scoped actuator cap.
+        # The standard dual_x5 configuration has no such field and therefore
+        # keeps its upstream effort limits unchanged.
+        if cfg is not None and "arm_effort_limit_sim" in cfg:
+            effort_limit = float(cfg["arm_effort_limit_sim"])
+            if effort_limit <= 0:
+                raise ValueError("arm_effort_limit_sim must be positive")
+            arm_actuator = scene_cfg.actuators.get("arm")
+            if arm_actuator is None:
+                raise ValueError(f"Robot {robot_name} has no arm actuator to limit")
+            scene_cfg = scene_cfg.replace(
+                actuators={**scene_cfg.actuators, "arm": arm_actuator.replace(effort_limit_sim=effort_limit)}
+            )
+
         scene_cfg = scene_cfg.replace(
             prim_path=f"{ENV_REGEX_NAMESPACE}/robot{idx}",
             init_state=ArticulationCfg.InitialStateCfg(
