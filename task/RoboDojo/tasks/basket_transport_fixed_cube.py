@@ -19,16 +19,27 @@ def attach_cube(
 
     basket = stage.GetPrimAtPath(basket_path)
     cube = stage.GetPrimAtPath(cube_path)
-    if not basket or not cube or not basket.HasAPI(UsdPhysics.RigidBodyAPI) or not cube.HasAPI(UsdPhysics.RigidBodyAPI):
+    if (
+        not basket
+        or not cube
+        or not basket.HasAPI(UsdPhysics.RigidBodyAPI)
+        or not cube.HasAPI(UsdPhysics.RigidBodyAPI)
+    ):
         raise ValueError("fixed payload requires two valid rigid bodies")
     cache = UsdGeom.XformCache(Usd.TimeCode.Default())
     # Strip scale: joint frames use rigid-body coordinates, not mesh scale.
     if (basket_frame is None) != (cube_frame is None):
         raise ValueError("supply both rigid-body frames or neither")
     basket_world = (
-        basket_frame if basket_frame is not None else cache.GetLocalToWorldTransform(basket).RemoveScaleShear()
+        basket_frame
+        if basket_frame is not None
+        else cache.GetLocalToWorldTransform(basket).RemoveScaleShear()
     )
-    cube_world = cube_frame if cube_frame is not None else cache.GetLocalToWorldTransform(cube).RemoveScaleShear()
+    cube_world = (
+        cube_frame
+        if cube_frame is not None
+        else cache.GetLocalToWorldTransform(cube).RemoveScaleShear()
+    )
     relative = cube_world * basket_world.GetInverse()
     joint = UsdPhysics.FixedJoint.Define(stage, joint_path)
     joint.CreateBody0Rel().SetTargets([Sdf.Path(basket_path)])
@@ -57,10 +68,6 @@ class basket_transport_fixed_cube(BasketTransportCommon, TaskEnv):
             if stage is not None:
                 stage.RemovePrim(path)
         super().reset(seed=seed, options=options)
-        for robot in self.robot_manager.robot_list:
-            if robot.type == "target":
-                robot.gripper_target_step_fraction = 1.0
-                robot.interpolate_gripper_targets = False
         # The first reset launches Isaac and may replace the startup stage.
         stage = omni.usd.get_context().get_stage()
         layout = self.scene_manager.layout_manager

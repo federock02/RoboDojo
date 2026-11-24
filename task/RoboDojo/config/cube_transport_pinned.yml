@@ -1,0 +1,135 @@
+Geometry:
+- common:
+    scale:
+    - 1.1638316920322294
+    - 1.1638316920322294
+    - 0.00625
+    physics:
+      type: geometry
+      collision: false
+    relative_plane: Table
+    rotate_rand: false
+    margin: 0.0
+    visual: {}
+    xlim:
+    - 0.22
+    - 0.22
+    ylim:
+    - -0.04
+    - -0.04
+    zlim:
+    - -4.999999999999449e-05
+    - -4.999999999999449e-05
+  category:
+  - name: checkerboard
+    index:
+    - 0
+  select_mode:
+    nums:
+    - 1
+    mode: unique
+    label:
+    - target_zone
+- common:
+    scale:
+    - 0.2
+    - 0.2
+    - 0.04
+    physics:
+      type: geometry
+      collision: true
+      static_friction: 0.8
+      dynamic_friction: 0.8
+      restitution: 0.0
+    relative_plane: Table
+    rotate_rand: false
+    margin: 0.0
+    visual: {}
+    xlim:
+    - -0.22
+    - -0.22
+    ylim:
+    - -0.04
+    - -0.04
+    zlim:
+    - 0.020000000000000018
+    - 0.020000000000000018
+  category:
+  - name: cube_pedestal
+    index:
+    - 0
+  select_mode:
+    nums:
+    - 1
+    mode: unique
+    label:
+    - pin_pedestal
+Rigid:
+- common:
+    scale:
+    - 0.2
+    - 0.2
+    - 0.2
+    physics:
+      type: rigid
+      mass: 0.4
+      static_friction: 0.35
+      dynamic_friction: 0.25
+      restitution: 0.0
+    relative_plane: Table
+    rotate_rand: false
+    margin: 0.0
+    visual: {}
+    xlim:
+    - -0.22
+    - -0.22
+    ylim:
+    - -0.04
+    - -0.04
+    zlim:
+    - 0.14
+    - 0.14
+  category:
+  - name: cube_through_hole
+    index:
+    - 0
+  select_mode:
+    nums:
+    - 1
+    mode: unique
+    label:
+    - large_cube
+- common:
+    scale:
+    - 0.024
+    - 0.024
+    - 0.275
+    physics:
+      type: rigid
+      mass: 0.05
+      static_friction: 0.35
+      dynamic_friction: 0.25
+      restitution: 0.0
+    relative_plane: Table
+    rotate_rand: false
+    margin: 0.0
+    visual: {}
+    xlim:
+    - -0.22
+    - -0.22
+    ylim:
+    - -0.04
+    - -0.04
+    zlim:
+    - 0.13750000000000007
+    - 0.13750000000000007
+  category:
+  - name: cube_pin
+    index:
+    - 0
+  select_mode:
+    nums:
+    - 1
+    mode: unique
+    label:
+    - retaining_pin

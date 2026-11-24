@@ -125,3 +125,7 @@ Released under the [MIT License](LICENSE).
   <img alt="Isaac Lab 2.3" src="https://img.shields.io/badge/Isaac_Lab-2.3-475569?style=flat-square&logo=nvidia&logoColor=76B900&labelColor=64748b" height="22"/>&nbsp;
   <img alt="License MIT" src="https://img.shields.io/badge/License-MIT-475569?style=flat-square&labelColor=64748b" height="22"/>
 </p>
+
+## Custom tasks
+
+This branch includes project-specific basket and cube task variants in addition to the standard RoboDojo tasks. See [CUSTOM_TASKS.md](CUSTOM_TASKS.md) for the task list and how seeded scenes and their generated assets are prepared.

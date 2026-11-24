@@ -1,0 +1,101 @@
+Geometry:
+- common:
+    scale:
+    - 1.1638316920322294
+    - 1.1638316920322294
+    - 0.00625
+    physics:
+      type: geometry
+      collision: false
+    relative_plane: Table
+    rotate_rand: false
+    margin: 0.0
+    visual: {}
+    xlim:
+    - 0.22
+    - 0.22
+    ylim:
+    - -0.04
+    - -0.04
+    zlim:
+    - -4.999999999999449e-05
+    - -4.999999999999449e-05
+  category:
+  - name: checkerboard
+    index:
+    - 0
+  select_mode:
+    nums:
+    - 1
+    mode: unique
+    label:
+    - target_zone
+- common:
+    scale:
+    - 0.024
+    - 0.024
+    - 0.04
+    physics:
+      type: geometry
+      collision: true
+      static_friction: 0.35
+      dynamic_friction: 0.25
+      restitution: 0.0
+    relative_plane: Table
+    rotate_rand: false
+    margin: 0.0
+    visual: {}
+    xlim:
+    - -0.22
+    - -0.22
+    ylim:
+    - -0.04
+    - -0.04
+    zlim:
+    - 0.020000000000000018
+    - 0.020000000000000018
+  category:
+  - name: cube_retaining_peg
+    index:
+    - 0
+  select_mode:
+    nums:
+    - 1
+    mode: unique
+    label:
+    - retaining_peg
+Rigid:
+- common:
+    scale:
+    - 0.2
+    - 0.2
+    - 0.2
+    physics:
+      type: rigid
+      mass: 0.4
+      static_friction: 0.35
+      dynamic_friction: 0.25
+      restitution: 0.0
+    relative_plane: Table
+    rotate_rand: false
+    margin: 0.0
+    visual: {}
+    xlim:
+    - -0.22
+    - -0.22
+    ylim:
+    - -0.04
+    - -0.04
+    zlim:
+    - 0.09999999999999998
+    - 0.09999999999999998
+  category:
+  - name: cube_socket
+    index:
+    - 0
+  select_mode:
+    nums:
+    - 1
+    mode: unique
+    label:
+    - large_cube

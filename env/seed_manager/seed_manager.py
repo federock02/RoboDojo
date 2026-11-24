@@ -1,9 +1,9 @@
+import os
+import re
 from collections.abc import Iterable, Mapping
 from copy import deepcopy
-import os
 from pathlib import Path
-import re
-from typing import Any, Dict, List
+from typing import Any
 
 from env.global_configs import ASSETS_PATH, BENCHMARK
 from utils.load_file import *
@@ -22,7 +22,7 @@ class SeedManager:
         self.ed_idx: int
         self.type: str
 
-        self._current_batch_seeds: List[int] | None = None
+        self._current_batch_seeds: list[int] | None = None
 
     def init_eval(
         self,
@@ -30,7 +30,9 @@ class SeedManager:
         abandoned_layout_ids: Iterable[int] | None = None,
     ):
         self.eval_seed = self.config.get("seed", 0)
-        layout_dir = Path(ASSETS_PATH, "Eval_Layout", BENCHMARK, self.config_name, str(self.eval_seed))
+        layout_dir = Path(
+            ASSETS_PATH, "Eval_Layout", BENCHMARK, self.config_name, str(self.eval_seed)
+        )
         pattern = re.compile(rf"{re.escape(self.task_name)}_\d+\.json")
         matching_files = sorted(
             [p for p in layout_dir.iterdir() if pattern.fullmatch(p.name)],
@@ -43,9 +45,11 @@ class SeedManager:
             self.seed_info[idx] = {"scene_layout": file_path}
 
         all_layout_ids = list(range(len(matching_files)))
-        excluded = set(int(s) for s in (completed_layout_ids or [])) | set(int(s) for s in (abandoned_layout_ids or []))
+        excluded = {int(s) for s in (completed_layout_ids or [])} | {
+            int(s) for s in (abandoned_layout_ids or [])
+        }
         if excluded:
-            self.seed_list: List[int] = [s for s in all_layout_ids if s not in excluded]
+            self.seed_list: list[int] = [s for s in all_layout_ids if s not in excluded]
             print(
                 f"[SeedManager] init_eval resume filter: excluded={len(excluded)} "
                 f"remaining={len(self.seed_list)}/{len(all_layout_ids)}"
@@ -53,13 +57,25 @@ class SeedManager:
         else:
             self.seed_list = all_layout_ids
         self.st_idx = 0
+        selected = os.environ.get("ROBODOJO_LAYOUT_ID")
+        if selected is not None:
+            if not selected.isascii() or not selected.isdecimal():
+                raise ValueError("ROBODOJO_LAYOUT_ID must be a nonnegative integer")
+            layout_id = int(selected)
+            expected = layout_dir / f"{self.task_name}_{layout_id}.json"
+            if (
+                layout_id not in self.seed_list
+                or Path(matching_files[layout_id]) != expected
+            ):
+                raise ValueError(f"Requested layout is unavailable: {expected}")
+            self.seed_list = [layout_id]
         self.ed_idx = len(self.seed_list)
 
         self.type = "eval"
         self.idx = 0
         self._current_batch_seeds = None
 
-    def get_seeds(self, max_count: int | None = None) -> List[int] | None:
+    def get_seeds(self, max_count: int | None = None) -> list[int] | None:
         """Return a list of seeds for the next `reset()` call.
 
         Returns None when enough episodes have been successfully collected.
@@ -79,20 +95,24 @@ class SeedManager:
             batch = self.seed_list[self.idx : self.ed_idx]
             result = deepcopy(batch)
             for _ in range(self.num_envs - len(result)):
-                batch.append(self.seed_list[self.ed_idx - 1])  # pad with last seed if not enough remaining
+                batch.append(
+                    self.seed_list[self.ed_idx - 1]
+                )  # pad with last seed if not enough remaining
         else:
             batch = self.seed_list[self.idx : self.idx + self.num_envs]
         self.idx += self.num_envs
         self._current_batch_seeds = batch
         return batch
 
-    def get_seed_scene_info(self, seed: int) -> Dict[str, Any]:
+    def get_seed_scene_info(self, seed: int) -> dict[str, Any]:
         seed_info = self.seed_info.get(seed)
         if seed_info is None:
             raise ValueError(f"Seed {seed} not found in seed list.")
         file_path = seed_info.get("scene_layout")
         if file_path is None or not os.path.exists(file_path):
-            raise ValueError(f"Scene layout file not found for seed {seed} at expected path {file_path}.")
+            raise ValueError(
+                f"Scene layout file not found for seed {seed} at expected path {file_path}."
+            )
         data = load_json(file_path)
         return data
 

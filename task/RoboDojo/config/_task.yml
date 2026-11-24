@@ -168,3 +168,42 @@ tasks:
   cube_stack_sizes:
     robot_config: "dual_x5_payload_limited"
     eval_nums: 1
+  cube_transport_recessed:
+    robot_config: "dual_x5_payload_limited"
+    eval_nums: 1
+  cube_transport_recessed_fragile:
+    robot_config: "dual_x5_payload_limited"
+    eval_nums: 1
+
+  cube_transport_recessed_deep:
+    robot_config: "dual_x5_payload_limited"
+    eval_nums: 1
+
+  cube_transport_pegged:
+    robot_config: "dual_x5_payload_limited"
+    eval_nums: 1
+  cube_transport_pinned:
+    robot_config: "dual_x5_payload_limited"
+    eval_nums: 1
+
+  cube_transport_high_friction:
+    robot_config: "dual_x5_payload_limited"
+    eval_nums: 1
+  recessed_basket:
+    robot_config: "dual_x5_payload_limited"
+    eval_nums: 1
+
+  recessed_heavy_basket:
+    robot_config: "dual_x5_payload_limited"
+    eval_nums: 1
+  basket_transport_empty_high_friction:
+    robot_config: "dual_x5_payload_limited"
+    eval_nums: 1
+
+  basket_transport_partial_high_friction:
+    robot_config: "dual_x5_payload_limited"
+    eval_nums: 1
+
+  basket_transport_heavy_cubes_high_friction:
+    robot_config: "dual_x5_payload_limited"
+    eval_nums: 1

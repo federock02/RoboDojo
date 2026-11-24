@@ -29,6 +29,7 @@ TARGET_SIDE_M = 0.26
 CONTACT_GAP_M = 0.006
 PENETRATION_M = 0.003
 EDGE_TOLERANCE_M = 0.003
+UPRIGHT_TOLERANCE_DEG = 10.0
 
 
 def rotation_matrix(quaternion):
@@ -67,6 +68,12 @@ def bottom_face(pose, side):
     return local @ rotation.T + np.asarray(pose[0]).reshape(3)
 
 
+def upright_cube(pose):
+    """Require the cube's top face to stay up; yaw is free."""
+    rotation = rotation_matrix(pose[1])
+    return bool(rotation[2, 2] >= np.cos(np.deg2rad(UPRIGHT_TOLERANCE_DEG)))
+
+
 def supported_on_table(pose, side, table_top):
     bottom = bottom_face(pose, side)
     if bottom is None:
@@ -85,7 +92,9 @@ def supported_on_cube(upper, upper_side, lower, lower_side):
     if abs(rotation[2, vertical_axis]) < np.cos(np.deg2rad(10)):
         return False
     local = (bottom - np.asarray(lower[0]).reshape(3)) @ rotation
-    gaps = local[:, vertical_axis] * np.sign(rotation[2, vertical_axis]) - lower_side / 2
+    gaps = (
+        local[:, vertical_axis] * np.sign(rotation[2, vertical_axis]) - lower_side / 2
+    )
     lateral = np.delete(local, vertical_axis, axis=1)
     return bool(
         np.all((gaps >= -PENETRATION_M) & (gaps <= CONTACT_GAP_M))
@@ -93,16 +102,51 @@ def supported_on_cube(upper, upper_side, lower, lower_side):
     )
 
 
-def arrangement_checks(poses, target_pose, table_top, *, stacked):
-    """Return final placement stages; a previous lift never invalidates a result."""
-    large = poses["large_cube"]
+def target_contains_cube(large, side, target_pose, target_side, target_shape):
     target_position, target_quaternion = target_pose
-    vertices = cube_vertices(large, CUBE_SPECS["large_cube"]["side"])
-    target_local = (vertices - np.asarray(target_position).reshape(3)) @ rotation_matrix(target_quaternion)
-    in_target = np.all(np.abs(target_local[:, :2]) <= TARGET_SIDE_M / 2 + EDGE_TOLERANCE_M)
-    base = bool(in_target and supported_on_table(large, CUBE_SPECS["large_cube"]["side"], table_top))
+    vertices = cube_vertices(large, side)
+    target_local = (
+        vertices - np.asarray(target_position).reshape(3)
+    ) @ rotation_matrix(target_quaternion)
+    if target_shape == "square":
+        in_target = bool(
+            np.all(np.abs(target_local[:, :2]) <= target_side / 2 + EDGE_TOLERANCE_M)
+        )
+    else:
+        from .seeded_task_variants import target_contains_footprint
+
+        in_target = target_contains_footprint(
+            target_local[:, :2], target_side, target_shape, EDGE_TOLERANCE_M
+        )
+    return in_target
+
+
+def arrangement_checks(
+    poses,
+    target_pose,
+    table_top,
+    *,
+    stacked,
+    sides=None,
+    target_side=TARGET_SIDE_M,
+    target_shape="square",
+):
+    """Return final placement stages; a previous lift never invalidates a result."""
+    sides = sides or {label: spec["side"] for label, spec in CUBE_SPECS.items()}
+    large = poses["large_cube"]
+    in_target = target_contains_cube(
+        large, sides["large_cube"], target_pose, target_side, target_shape
+    )
+    base = bool(in_target and supported_on_table(large, sides["large_cube"], table_top))
     if not stacked:
         return (base,)
-    medium = supported_on_cube(poses["medium_cube"], 0.06, large, 0.20)
-    small = supported_on_cube(poses["small_cube"], 0.035, poses["medium_cube"], 0.06)
+    medium = supported_on_cube(
+        poses["medium_cube"], sides["medium_cube"], large, sides["large_cube"]
+    )
+    small = supported_on_cube(
+        poses["small_cube"],
+        sides["small_cube"],
+        poses["medium_cube"],
+        sides["medium_cube"],
+    )
     return (base, bool(base and medium), bool(base and medium and small))

@@ -1,0 +1,203 @@
+Geometry:
+- common:
+    scale:
+    - 1.1638316920322294
+    - 1.1638316920322294
+    - 0.00625
+    physics:
+      type: geometry
+      collision: false
+    relative_plane: Table
+    rotate_rand: false
+    margin: 0.0
+    visual: {}
+    xlim:
+    - 0.22
+    - 0.22
+    ylim:
+    - -0.04
+    - -0.04
+    zlim:
+    - 0.014950000000000019
+    - 0.014950000000000019
+  category:
+  - name: checkerboard
+    index:
+    - 0
+  select_mode:
+    nums:
+    - 1
+    mode: unique
+    label:
+    - target_zone
+- common:
+    scale:
+    - 0.37899999999999995
+    - 1.1
+    - 0.015
+    physics:
+      type: geometry
+      collision: true
+      static_friction: 0.8
+      dynamic_friction: 0.8
+      restitution: 0.0
+    relative_plane: Table
+    rotate_rand: false
+    margin: 0.0
+    visual: {}
+    xlim:
+    - -0.5105
+    - -0.5105
+    ylim:
+    - -0.050000000000000044
+    - -0.050000000000000044
+    zlim:
+    - 0.007499999999999951
+    - 0.007499999999999951
+  category:
+  - name: recessed_tabletop
+    index:
+    - 0
+  select_mode:
+    nums:
+    - 1
+    mode: unique
+    label:
+    - tabletop_left
+- common:
+    scale:
+    - 0.819
+    - 1.1
+    - 0.015
+    physics:
+      type: geometry
+      collision: true
+      static_friction: 0.8
+      dynamic_friction: 0.8
+      restitution: 0.0
+    relative_plane: Table
+    rotate_rand: false
+    margin: 0.0
+    visual: {}
+    xlim:
+    - 0.2905
+    - 0.2905
+    ylim:
+    - -0.050000000000000044
+    - -0.050000000000000044
+    zlim:
+    - 0.007499999999999951
+    - 0.007499999999999951
+  category:
+  - name: recessed_tabletop
+    index:
+    - 0
+  select_mode:
+    nums:
+    - 1
+    mode: unique
+    label:
+    - tabletop_right
+- common:
+    scale:
+    - 0.202
+    - 0.4590000000000001
+    - 0.015
+    physics:
+      type: geometry
+      collision: true
+      static_friction: 0.8
+      dynamic_friction: 0.8
+      restitution: 0.0
+    relative_plane: Table
+    rotate_rand: false
+    margin: 0.0
+    visual: {}
+    xlim:
+    - -0.22
+    - -0.22
+    ylim:
+    - -0.37050000000000005
+    - -0.37050000000000005
+    zlim:
+    - 0.007499999999999951
+    - 0.007499999999999951
+  category:
+  - name: recessed_tabletop
+    index:
+    - 0
+  select_mode:
+    nums:
+    - 1
+    mode: unique
+    label:
+    - tabletop_near
+- common:
+    scale:
+    - 0.202
+    - 0.439
+    - 0.015
+    physics:
+      type: geometry
+      collision: true
+      static_friction: 0.8
+      dynamic_friction: 0.8
+      restitution: 0.0
+    relative_plane: Table
+    rotate_rand: false
+    margin: 0.0
+    visual: {}
+    xlim:
+    - -0.22
+    - -0.22
+    ylim:
+    - 0.2805
+    - 0.2805
+    zlim:
+    - 0.007499999999999951
+    - 0.007499999999999951
+  category:
+  - name: recessed_tabletop
+    index:
+    - 0
+  select_mode:
+    nums:
+    - 1
+    mode: unique
+    label:
+    - tabletop_far
+Rigid:
+- common:
+    scale:
+    - 0.2
+    - 0.2
+    - 0.2
+    physics:
+      type: rigid
+      mass: 0.4
+      static_friction: 0.35
+      dynamic_friction: 0.25
+      restitution: 0.0
+    relative_plane: Table
+    rotate_rand: false
+    margin: 0.0
+    visual: {}
+    xlim:
+    - -0.22
+    - -0.22
+    ylim:
+    - -0.04
+    - -0.04
+    zlim:
+    - 0.09999999999999998
+    - 0.09999999999999998
+  category:
+  - name: cube_fragile
+    index:
+    - 0
+  select_mode:
+    nums:
+    - 1
+    mode: unique
+    label:
+    - large_cube

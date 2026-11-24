@@ -34,14 +34,19 @@ class BasketTransportCommon:
 
     def _basket_at_target(self):
         return self.reward_manager.is_AB_xy_distance_within_threshold(
-            label_A="basket", label_B="target_zone", threshold=0.07
+            label_A="basket", label_B="target_zone", threshold=0.10
         )
 
     def _basket_upright(self):
-        return self.reward_manager.is_axis_up(label="basket", axis=[0, 0, 1], threshold=25)
+        return self.reward_manager.is_axis_up(
+            label="basket", axis=[0, 0, 1], threshold=25
+        )
 
     def _payload_reloaded(self):
-        return [self.reward_manager.is_A_in_B(label_A=payload, label_B="basket") for payload in self.payload_labels]
+        return [
+            self.reward_manager.is_A_in_B(label_A=payload, label_B="basket")
+            for payload in self.payload_labels
+        ]
 
     def _final_checks(self):
         return [
@@ -71,7 +76,7 @@ class BasketTransportCommon:
         )
 
     def gen_instruction(self, env_idx):
-        instruction = f"Move the {self.basket_description} to {self.target_description}"
+        instruction = "Move the shopping basket to the marked target zone"
         if self.payload_labels:
             instruction += " with all objects inside"
         return [instruction + "."]
