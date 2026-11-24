@@ -649,7 +649,7 @@ class LayoutManager:
                         stable[env_idx].remove(actor)
                         unstable[env_idx].append(actor)
                     history_pose[env_idx][actor].append((pos, rot))
-            if step >= maxstep - window:
+            if step == maxstep - 1:
                 for env_idx in range(self.num_envs):
                     if env.success[env_idx] is False:
                         continue
