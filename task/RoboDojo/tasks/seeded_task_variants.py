@@ -1,10 +1,10 @@
 """Versioned, CPU-only seeded layouts for project-owned tasks."""
 
-from copy import deepcopy
 import itertools
 import math
 import operator
 import random
+from copy import deepcopy
 
 BASKET_TASKS = tuple(
     "basket_transport_" + s
@@ -135,6 +135,7 @@ SHAPES = ("square", "round", "cross", "circle")
 # settle the basket onto the tabletop without starting it visibly suspended.
 BASKET_BOTTOM_LOCAL_Z_M = -0.1095
 BASKET_TABLE_CLEARANCE_M = 0.003
+TARGET_VISUAL_CLEARANCE_M = 0.0025
 
 
 def target_contains(points, side, shape, tolerance=0.003):
@@ -642,7 +643,7 @@ def generate_layout(reference, task, seed):
         seat_peg(layout["Geometry"][PEG_CATEGORY][0], rigid[0], specs["large_cube"])
     elif task == PINNED_CUBE_TASK:
         place_pinned_fixture(layout, rigid[0], specs["large_cube"])
-    target["default_pos"] = [*target_xy, table_top + 0.00005]
+    target["default_pos"] = [*target_xy, table_top + TARGET_VISUAL_CLEARANCE_M]
     target["scale"] = [1.0, 1.0, 1.0]  # Generated target mesh is already in metres.
     target["visual"] = {}
     target["physics"] = {"type": "geometry", "collision": False}
@@ -727,5 +728,24 @@ def target_mesh(variation):
         f" int[] faceVertexCounts = [{values([4] * len(colors))}]\n"
         f" int[] faceVertexIndices = [{values(faces)}]\n"
         f' color3f[] primvars:displayColor = [{values(colors)}] ( interpolation = "uniform" )\n'
-        ' uniform token subdivisionScheme = "none"\n bool doubleSided = true\n }\n}\n'
+        ' uniform token subdivisionScheme = "none"\n bool doubleSided = true\n'
+        " rel material:binding = </Target/Looks/TargetMaterial>\n }\n"
+        'def Scope "Looks" {\n'
+        ' def Material "TargetMaterial" {\n'
+        "  token outputs:surface.connect = </Target/Looks/TargetMaterial/PreviewSurface.outputs:surface>\n"
+        '  def Shader "PrimvarReader" {\n'
+        '   uniform token info:id = "UsdPrimvarReader_float3"\n'
+        '   token inputs:varname = "displayColor"\n'
+        "   float3 outputs:result\n"
+        "  }\n"
+        '  def Shader "PreviewSurface" {\n'
+        '   uniform token info:id = "UsdPreviewSurface"\n'
+        "   color3f inputs:diffuseColor.connect = </Target/Looks/TargetMaterial/PrimvarReader.outputs:result>\n"
+        "   float inputs:roughness = 0.85\n"
+        "   float inputs:metallic = 0\n"
+        "   token outputs:surface\n"
+        "  }\n"
+        " }\n"
+        "}\n"
+        "}\n"
     )
