@@ -1,10 +1,10 @@
 """Versioned, CPU-only seeded layouts for project-owned tasks."""
 
+from copy import deepcopy
 import itertools
 import math
 import operator
 import random
-from copy import deepcopy
 
 BASKET_TASKS = tuple(
     "basket_transport_" + s
@@ -75,6 +75,32 @@ PIN_CATEGORY = "cube_pin"
 PIN_DIAMETER_M = 0.024
 PIN_EXPOSED_M = 0.035
 THROUGH_HOLE_DIAMETER_M = 0.028
+# The two L-tool tasks share one rigid asset.  The crossbar sits at the far
+# end of the long arm and the raised handle at the near end.  The long arm is
+# offset to one side of the crossbar so it can pass beside the cube while the
+# crossbar reaches behind it; the same asset therefore pushes and pulls.
+TOOL_PUSH_TASK = "tool_push_cube"
+TOOL_PULL_TASK = "tool_pull_cube"
+TOOL_TASKS = (TOOL_PUSH_TASK, TOOL_PULL_TASK)
+TOOL_CATEGORY = "l_tool"
+TOOL_LENGTH_M = 0.40
+TOOL_WIDTH_M = 0.13
+TOOL_HEIGHT_M = 0.12
+TOOL_CROSSBAR_THICKNESS_M = 0.03
+TOOL_CROSSBAR_INSET_M = TOOL_LENGTH_M / 2 - TOOL_CROSSBAR_THICKNESS_M
+TOOL_ARM_HALF_WIDTH_M = 0.013
+TOOL_ARM_CENTER_OFFSET_M = 0.0468
+TOOL_CONTACT_GAP_M = 0.004
+# Native cube asset edge length; replay scale maps it to the requested side.
+REFERENCE_CUBE_ASSET_SIDE_M = 0.035
+# Near/far bands used by the seed generator.  The far band is outside the
+# arms' useful reach; the near band is reachable.
+TOOL_CUBE_NEAR_Y_M = (0.02, 0.07)
+TOOL_CUBE_FAR_Y_M = (0.27, 0.33)
+TOOL_TARGET_NEAR_Y_M = (-0.05, 0.0)
+TOOL_TARGET_FAR_Y_M = (0.28, 0.34)
+TOOL_CUBE_SIDE_M = (0.055, 0.065)
+TOOL_TARGET_SIDE_M = (0.17, 0.19)
 DEFAULT_TASKS = (
     BASKET_TASKS
     + RECESSED_BASKET_TASKS
@@ -85,7 +111,7 @@ DEFAULT_TASKS = (
     )
 )
 # New tasks are appended so existing task-to-asset indices stay stable.
-TASKS = DEFAULT_TASKS + NEW_CUBE_TASKS + FRICTION_TASKS
+TASKS = DEFAULT_TASKS + NEW_CUBE_TASKS + FRICTION_TASKS + TOOL_TASKS
 CUBE_TASKS = (
     "cube_transport_large",
     "cube_stack_sizes",
@@ -451,11 +477,70 @@ def generate_layout(reference, task, seed):
     colors = rng.sample(COLORS, len(COLORS))
     shape = rng.choice(SHAPES)
     target_side = (
-        rng.uniform(0.37, 0.41) if task in CUBE_TASKS else rng.uniform(0.34, 0.40)
+        rng.uniform(0.37, 0.41)
+        if task in CUBE_TASKS
+        else (
+            rng.uniform(*TOOL_TARGET_SIDE_M)
+            if task in TOOL_TASKS
+            else rng.uniform(0.34, 0.40)
+        )
     )
     target_xy = [rng.uniform(0.19, 0.23), rng.uniform(-0.09, -0.01)]
     specs = {}
-    if task in BASKET_FAMILY_TASKS:
+    if task in TOOL_TASKS:
+        cube = next(obj for obj in rigid if obj.get("label") == "cube")
+        tool = next(obj for obj in rigid if obj.get("label") == TOOL_CATEGORY)
+        side = rng.uniform(*TOOL_CUBE_SIDE_M)
+        specs["cube"] = side
+        cube_x = rng.uniform(-0.03, 0.03)
+        if task == TOOL_PUSH_TASK:
+            cube_y = rng.uniform(*TOOL_CUBE_NEAR_Y_M)
+            target_xy = [
+                cube_x + rng.uniform(-0.02, 0.02),
+                rng.uniform(*TOOL_TARGET_FAR_Y_M),
+            ]
+        else:
+            cube_y = rng.uniform(*TOOL_CUBE_FAR_Y_M)
+            target_xy = [
+                cube_x + rng.uniform(-0.02, 0.02),
+                rng.uniform(*TOOL_TARGET_NEAR_Y_M),
+            ]
+        cube.update(
+            scale=[side / REFERENCE_CUBE_ASSET_SIDE_M] * 3,
+            default_pos=[cube_x, cube_y, table_top + side / 2],
+            default_ori=[1.0, 0.0, 0.0, 0.0],
+            qpos=[1.0, 0.0, 0.0, 0.0],
+            rotate_deg=0.0,
+            rotate_rand=False,
+            relative_plane="Table",
+            margin=0.0,
+            visual={"color": list(colors[0])},
+        )
+        half = side / 2
+        tool_y = (
+            cube_y - half - TOOL_CONTACT_GAP_M - TOOL_CROSSBAR_INSET_M
+            if task == TOOL_PUSH_TASK
+            else cube_y + half + TOOL_CONTACT_GAP_M - TOOL_CROSSBAR_INSET_M
+        )
+        tool_x = (
+            cube_x
+            + half
+            + TOOL_CONTACT_GAP_M
+            + TOOL_ARM_HALF_WIDTH_M
+            - TOOL_ARM_CENTER_OFFSET_M
+        )
+        tool.update(
+            scale=[TOOL_WIDTH_M, TOOL_LENGTH_M, TOOL_HEIGHT_M],
+            default_pos=[tool_x, tool_y, table_top + TOOL_HEIGHT_M / 2],
+            default_ori=[1.0, 0.0, 0.0, 0.0],
+            qpos=[1.0, 0.0, 0.0, 0.0],
+            rotate_deg=0.0,
+            rotate_rand=False,
+            relative_plane="Table",
+            margin=0.0,
+            visual={"color": list(colors[1])},
+        )
+    elif task in BASKET_FAMILY_TASKS:
         basket = next(obj for obj in rigid if obj.get("label") == "basket")
         clearance = (
             BASKET_POCKET_CLEARANCE_M
@@ -568,6 +653,13 @@ def generate_layout(reference, task, seed):
         "version": 1,
         "seed": seed,
         "task": task,
+        "direction": (
+            "push"
+            if task == TOOL_PUSH_TASK
+            else "pull"
+            if task == TOOL_PULL_TASK
+            else None
+        ),
         "cube_sides": specs,
         "target_side": target_side,
         "target_shape": shape,

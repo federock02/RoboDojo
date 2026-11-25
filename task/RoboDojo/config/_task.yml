@@ -207,3 +207,11 @@ tasks:
   basket_transport_heavy_cubes_high_friction:
     robot_config: "dual_x5_payload_limited"
     eval_nums: 1
+
+  tool_push_cube:
+    data_source: "teleop"
+    eval_nums: 1
+
+  tool_pull_cube:
+    data_source: "teleop"
+    eval_nums: 1

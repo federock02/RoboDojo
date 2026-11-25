@@ -1,0 +1,109 @@
+Geometry:
+- common:
+    scale:
+    - 0.7163201727411557
+    - 0.7163201727411557
+    - 0.00625
+    physics:
+      type: geometry
+      collision: false
+    relative_plane: Table
+    rotate_rand: false
+    margin: 0.0
+    visual: {}
+    xlim:
+    - 0.0
+    - 0.0
+    ylim:
+    - 0.0
+    - 0.0
+    zlim:
+    - -5.0e-05
+    - -5.0e-05
+  category:
+  - name: checkerboard
+    index:
+    - 0
+  select_mode:
+    nums:
+    - 1
+    mode: unique
+    label:
+    - target_zone
+Rigid:
+- common:
+    scale:
+    - 1.7142857142857142
+    - 1.7142857142857142
+    - 1.7142857142857142
+    physics:
+      type: rigid
+      mass: 0.1
+      static_friction: 0.35
+      dynamic_friction: 0.25
+      restitution: 0.0
+    relative_plane: Table
+    rotate_rand: false
+    margin: 0.0
+    visual:
+      color:
+      - 1.0
+      - 0.25
+      - 0.02
+    xlim:
+    - 0.0
+    - 0.0
+    ylim:
+    - 0.3
+    - 0.3
+    zlim:
+    - 0.03
+    - 0.03
+  category:
+  - name: cube
+    index:
+    - 0
+  select_mode:
+    nums:
+    - 1
+    mode: unique
+    label:
+    - cube
+- common:
+    scale:
+    - 0.13
+    - 0.4
+    - 0.12
+    physics:
+      type: rigid
+      mass: 0.35
+      static_friction: 0.5
+      dynamic_friction: 0.4
+      restitution: 0.0
+    relative_plane: Table
+    rotate_rand: false
+    margin: 0.0
+    visual:
+      color:
+      - 0.24
+      - 0.26
+      - 0.29
+    xlim:
+    - 0.0002
+    - 0.0002
+    ylim:
+    - 0.164
+    - 0.164
+    zlim:
+    - 0.06
+    - 0.06
+  category:
+  - name: l_tool
+    index:
+    - 0
+  select_mode:
+    nums:
+    - 1
+    mode: unique
+    label:
+    - l_tool
