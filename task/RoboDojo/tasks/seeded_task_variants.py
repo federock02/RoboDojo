@@ -87,7 +87,9 @@ TOOL_LENGTH_M = 0.40
 TOOL_WIDTH_M = 0.13
 TOOL_HEIGHT_M = 0.12
 TOOL_CROSSBAR_THICKNESS_M = 0.03
+# Near and far faces of the crossbar, measured from the asset origin.
 TOOL_CROSSBAR_INSET_M = TOOL_LENGTH_M / 2 - TOOL_CROSSBAR_THICKNESS_M
+TOOL_CROSSBAR_FAR_M = TOOL_LENGTH_M / 2
 TOOL_ARM_HALF_WIDTH_M = 0.013
 TOOL_ARM_CENTER_OFFSET_M = 0.0468
 TOOL_CONTACT_GAP_M = 0.004
@@ -518,7 +520,7 @@ def generate_layout(reference, task, seed):
         )
         half = side / 2
         tool_y = (
-            cube_y - half - TOOL_CONTACT_GAP_M - TOOL_CROSSBAR_INSET_M
+            cube_y - half - TOOL_CONTACT_GAP_M - TOOL_CROSSBAR_FAR_M
             if task == TOOL_PUSH_TASK
             else cube_y + half + TOOL_CONTACT_GAP_M - TOOL_CROSSBAR_INSET_M
         )

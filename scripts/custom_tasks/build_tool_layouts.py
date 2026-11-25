@@ -44,8 +44,10 @@ def tool_pose(cube_xy, cube_side, direction):
     half = cube_side / 2
     gap = TOOL_CONTACT_GAP_M
     if direction == "push":
-        y = cube_xy[1] - half - gap - CROSSBAR_INSET_M
+        # The crossbar trails the cube, so its far face touches the cube first.
+        y = cube_xy[1] - half - gap - TOOL_LENGTH_M / 2
     else:
+        # The crossbar hooks the cube, so its near face touches first.
         y = cube_xy[1] + half + gap - CROSSBAR_INSET_M
     x = cube_xy[0] + half + gap + ARM_HALF_WIDTH_M - ARM_CENTER_OFFSET_M
     return [x, y]
