@@ -461,6 +461,7 @@ def generate_layout(reference, task, seed):
     # Some reference layouts still carry this metadata at the root. RoboDojo
     # treats unknown root keys as object categories; keep it only under Table.
     layout.pop("task_variation", None)
+    layout.pop("version", None)
     if task == PINNED_CUBE_TASK:
         # The fixture is rebuilt around the seeded cube below.
         layout["Rigid"].pop(PIN_CATEGORY, None)
