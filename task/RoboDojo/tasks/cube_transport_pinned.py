@@ -4,4 +4,4 @@ from .cube_transport_fixture_common import CubeTransportFixtureCommon
 
 
 class cube_transport_pinned(CubeTransportFixtureCommon):
-    pass
+    auxiliary_label = "retaining_pin"

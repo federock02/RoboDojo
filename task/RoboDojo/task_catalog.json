@@ -1,0 +1,434 @@
+{
+  "schema_version": 1,
+  "tasks": {
+    "align_blocks": {
+      "source": "official",
+      "family": "official geometric",
+      "subcategory": "block alignment",
+      "research_category": "pose alignment",
+      "physical_principles": [
+        "planar transport",
+        "pose alignment"
+      ],
+      "acquisition_status": "upstream_benchmark",
+      "evaluator_version": "native_robodojo"
+    },
+    "basket_transport_empty": {
+      "source": "custom",
+      "family": "basket",
+      "subcategory": "empty",
+      "research_category": "transport baseline",
+      "physical_principles": [
+        "grasping",
+        "planar transport"
+      ],
+      "acquisition_status": "previously_acquired_revalidation_required",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "basket",
+        "negative": "Move the released empty grippers along the transport route without contacting the basket. The basket stays at its start.",
+        "positive": "Pick up or push the basket into the target, settle upright, and open both grippers."
+      }
+    },
+    "basket_transport_empty_high_friction": {
+      "source": "custom",
+      "family": "basket",
+      "subcategory": "high friction, empty",
+      "research_category": "friction adaptation",
+      "physical_principles": [
+        "friction",
+        "grasping"
+      ],
+      "acquisition_status": "pending_validation",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "basket",
+        "negative": "Read back the pad and basket materials. Apply a matched low-height push with and without the high-friction pad and compare directed travel.",
+        "positive": "Lift from the pad, unloading first if required, then transport, settle upright, restore the original payloads and release."
+      }
+    },
+    "basket_transport_fixed_cube": {
+      "source": "custom",
+      "family": "basket",
+      "subcategory": "fixed payload",
+      "research_category": "constraint discovery",
+      "physical_principles": [
+        "rigid attachment",
+        "payload mass",
+        "containment"
+      ],
+      "acquisition_status": "previously_acquired_revalidation_required",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "basket",
+        "negative": "Apply matched extraction motions to the fixed cube and a free payload. Measure each motion relative to the basket.",
+        "positive": "Leave the attached cube in place, remove movable payloads as needed, move the basket, then reload and release."
+      }
+    },
+    "basket_transport_heavy_cubes": {
+      "source": "custom",
+      "family": "basket",
+      "subcategory": "heavy load",
+      "research_category": "payload adaptation",
+      "physical_principles": [
+        "payload mass",
+        "containment",
+        "friction"
+      ],
+      "acquisition_status": "previously_acquired_revalidation_required",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "basket",
+        "negative": "Attempt a loaded lift with the intended grip and calibrated load budget. Compare height with an empty or unloaded basket.",
+        "positive": "Unload enough mass, move the basket, reload all cubes, and release."
+      }
+    },
+    "basket_transport_heavy_cubes_high_friction": {
+      "source": "custom",
+      "family": "basket",
+      "subcategory": "high friction, heavy load",
+      "research_category": "friction adaptation",
+      "physical_principles": [
+        "friction",
+        "payload mass",
+        "containment"
+      ],
+      "acquisition_status": "pending_validation",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "basket",
+        "negative": "Read back the pad and basket materials. Apply a matched low-height push with and without the high-friction pad and compare directed travel.",
+        "positive": "Lift from the pad, unloading first if required, then transport, settle upright, restore the original payloads and release."
+      }
+    },
+    "basket_transport_overloaded": {
+      "source": "custom",
+      "family": "basket",
+      "subcategory": "overloaded",
+      "research_category": "payload adaptation",
+      "physical_principles": [
+        "payload mass",
+        "containment",
+        "friction"
+      ],
+      "acquisition_status": "previously_acquired_revalidation_required",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "basket",
+        "negative": "Execute a matched loaded lift and tabletop push before unloading. Record lift and directed travel relative to the unloaded controls.",
+        "positive": "Unload movable payloads, transport the lighter basket, reload and release."
+      }
+    },
+    "basket_transport_partial": {
+      "source": "custom",
+      "family": "basket",
+      "subcategory": "partially loaded",
+      "research_category": "payload adaptation",
+      "physical_principles": [
+        "payload mass",
+        "containment",
+        "grasping"
+      ],
+      "acquisition_status": "previously_acquired_revalidation_required",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "basket",
+        "negative": "Transport the basket but leave one removable payload out. The evaluator must withhold full success.",
+        "positive": "Transport the basket and finish with all original payloads inside and both grippers open."
+      }
+    },
+    "basket_transport_partial_high_friction": {
+      "source": "custom",
+      "family": "basket",
+      "subcategory": "high friction, partially loaded",
+      "research_category": "friction adaptation",
+      "physical_principles": [
+        "friction",
+        "payload mass",
+        "containment"
+      ],
+      "acquisition_status": "pending_validation",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "basket",
+        "negative": "Read back the pad and basket materials. Apply a matched low-height push with and without the high-friction pad and compare directed travel.",
+        "positive": "Lift from the pad, unloading first if required, then transport, settle upright, restore the original payloads and release."
+      }
+    },
+    "cube_stack_sizes": {
+      "source": "custom",
+      "family": "cube",
+      "subcategory": "three-cube stack",
+      "research_category": "compositional manipulation",
+      "physical_principles": [
+        "stacking",
+        "support",
+        "placement stability"
+      ],
+      "acquisition_status": "previously_acquired_revalidation_required",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "large_cube",
+        "negative": "Build one correct level and omit or misplace the top cube. Check that the intermediate score is awarded.",
+        "positive": "Place the large cube in the marker and complete a stable large\u2013medium\u2013small stack."
+      }
+    },
+    "cube_transport_high_friction": {
+      "source": "custom",
+      "family": "cube",
+      "subcategory": "high friction",
+      "research_category": "friction adaptation",
+      "physical_principles": [
+        "friction",
+        "grasping",
+        "planar transport"
+      ],
+      "acquisition_status": "pending_validation",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "large_cube",
+        "negative": "Read back the pad and cube materials. Compare directed distance under a matched low-height push on the standard scene.",
+        "positive": "Lift the cube from the pad, transport and release it inside the target."
+      }
+    },
+    "cube_transport_large": {
+      "source": "custom",
+      "family": "cube",
+      "subcategory": "large cube transport",
+      "research_category": "transport baseline",
+      "physical_principles": [
+        "planar transport",
+        "placement stability"
+      ],
+      "acquisition_status": "previously_acquired_revalidation_required",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "large_cube",
+        "negative": "Reach the target XY while holding the cube visibly above the support tolerance. The evaluator must withhold full success.",
+        "positive": "Move the cube fully inside the marker, release it and let it settle on the table."
+      }
+    },
+    "cube_transport_pegged": {
+      "source": "custom",
+      "family": "cube",
+      "subcategory": "hidden peg",
+      "research_category": "constraint discovery",
+      "physical_principles": [
+        "geometric interlock",
+        "clearance"
+      ],
+      "acquisition_status": "pending_validation",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "large_cube",
+        "negative": "Push and try the shallow-fixture tipping motion before lifting clear of the peg.",
+        "positive": "Lift vertically until the fixture is clear, translate into the marker, release and settle without violating any task constraint."
+      }
+    },
+    "cube_transport_pinned": {
+      "source": "custom",
+      "family": "cube",
+      "subcategory": "removable retaining pin",
+      "research_category": "compositional manipulation",
+      "physical_principles": [
+        "geometric interlock",
+        "clearance",
+        "sequencing"
+      ],
+      "acquisition_status": "pending_validation",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "large_cube",
+        "negative": "Attempt direct lateral transport with the pin seated. Compare with a matched push after the pin is extracted.",
+        "positive": "Extract the pin with a gripper, move it aside, then transport and settle the cube."
+      }
+    },
+    "cube_transport_recessed": {
+      "source": "custom",
+      "family": "cube",
+      "subcategory": "shallow recess",
+      "research_category": "constraint discovery",
+      "physical_principles": [
+        "geometric interlock",
+        "clearance"
+      ],
+      "acquisition_status": "previously_acquired_revalidation_required",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "large_cube",
+        "negative": "Apply a low-height lateral push across the lip; record whether tipping gives a valid bypass.",
+        "positive": "Lift vertically until the fixture is clear, translate into the marker, release and settle without violating any task constraint."
+      }
+    },
+    "cube_transport_recessed_deep": {
+      "source": "custom",
+      "family": "cube",
+      "subcategory": "deep recess",
+      "research_category": "constraint discovery",
+      "physical_principles": [
+        "geometric interlock",
+        "clearance"
+      ],
+      "acquisition_status": "pending_validation",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "large_cube",
+        "negative": "Try the low-height lateral and tipping motions that could bypass the shallow fixture.",
+        "positive": "Lift vertically until the fixture is clear, translate into the marker, release and settle without violating any task constraint."
+      }
+    },
+    "cube_transport_recessed_fragile": {
+      "source": "custom",
+      "family": "cube",
+      "subcategory": "fragile cube in recess",
+      "research_category": "constraint discovery",
+      "physical_principles": [
+        "geometric interlock",
+        "clearance",
+        "orientation constraint"
+      ],
+      "acquisition_status": "pending_validation",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "large_cube",
+        "negative": "Tip more than 10 degrees, then return the cube upright at the goal. The recorded trajectory must invalidate success.",
+        "positive": "Lift vertically until the fixture is clear, translate into the marker, release and settle without violating any task constraint."
+      }
+    },
+    "organize_table": {
+      "source": "official",
+      "family": "long horizon",
+      "subcategory": "table organization",
+      "research_category": "compositional manipulation",
+      "physical_principles": [
+        "placement",
+        "sequencing"
+      ],
+      "acquisition_status": "upstream_benchmark",
+      "evaluator_version": "native_robodojo"
+    },
+    "push_T": {
+      "source": "official",
+      "family": "official geometric",
+      "subcategory": "planar pose alignment",
+      "research_category": "pose alignment",
+      "physical_principles": [
+        "planar transport",
+        "controlled contact"
+      ],
+      "acquisition_status": "upstream_benchmark",
+      "evaluator_version": "native_robodojo"
+    },
+    "push_T_random": {
+      "source": "official",
+      "family": "official geometric",
+      "subcategory": "planar pose alignment",
+      "research_category": "pose alignment",
+      "physical_principles": [
+        "planar transport",
+        "controlled contact"
+      ],
+      "acquisition_status": "upstream_benchmark",
+      "evaluator_version": "native_robodojo"
+    },
+    "recessed_basket": {
+      "source": "custom",
+      "family": "basket",
+      "subcategory": "recessed",
+      "research_category": "constraint discovery",
+      "physical_principles": [
+        "geometric interlock",
+        "clearance",
+        "grasping"
+      ],
+      "acquisition_status": "pending_validation",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "basket",
+        "negative": "Push laterally at the starting height through an enclosing lip; compare with the unmodified basket.",
+        "positive": "Lift above the lip, translate, settle upright and release."
+      }
+    },
+    "recessed_heavy_basket": {
+      "source": "custom",
+      "family": "basket",
+      "subcategory": "recessed and heavy",
+      "research_category": "compositional manipulation",
+      "physical_principles": [
+        "geometric interlock",
+        "clearance",
+        "payload mass",
+        "containment"
+      ],
+      "acquisition_status": "pending_validation",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "basket",
+        "negative": "Attempt a lateral push and a loaded lift; compare with the flat and unloaded variants.",
+        "positive": "Unload the basket, lift over the lip, transport, reload and release."
+      }
+    },
+    "sweep_blocks": {
+      "source": "official",
+      "family": "tool use",
+      "subcategory": "sweeping",
+      "research_category": "tool-mediated transport",
+      "physical_principles": [
+        "controlled contact",
+        "planar transport"
+      ],
+      "acquisition_status": "upstream_benchmark",
+      "evaluator_version": "native_robodojo"
+    },
+    "sweep_blocks_random": {
+      "source": "official",
+      "family": "tool use",
+      "subcategory": "sweeping",
+      "research_category": "tool-mediated transport",
+      "physical_principles": [
+        "controlled contact",
+        "planar transport"
+      ],
+      "acquisition_status": "upstream_benchmark",
+      "evaluator_version": "native_robodojo"
+    },
+    "tool_pull_cube": {
+      "source": "custom",
+      "family": "tool use",
+      "subcategory": "L-tool pull",
+      "research_category": "tool-mediated reach",
+      "physical_principles": [
+        "reachability",
+        "leverage",
+        "hooking",
+        "controlled contact"
+      ],
+      "acquisition_status": "pending_validation",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "cube",
+        "negative": "Try direct gripper transport without using the tool across the near/far band. Check a separate lift-and-return trajectory with the grippers home.",
+        "positive": "Grasp the L-tool handle, seat the crossbar on the correct cube face for pulling, translate the cube within the marker without lifting it, release the tool and return both arms home."
+      }
+    },
+    "tool_push_cube": {
+      "source": "custom",
+      "family": "tool use",
+      "subcategory": "L-tool push",
+      "research_category": "tool-mediated reach",
+      "physical_principles": [
+        "reachability",
+        "leverage",
+        "pushing",
+        "controlled contact"
+      ],
+      "acquisition_status": "pending_validation",
+      "evaluator_version": "custom-progress-v2",
+      "controls": {
+        "object": "cube",
+        "negative": "Try direct gripper transport without using the tool across the near/far band. Check a separate lift-and-return trajectory with the grippers home.",
+        "positive": "Grasp the L-tool handle, seat the crossbar on the correct cube face for pushing, translate the cube within the marker without lifting it, release the tool and return both arms home."
+      }
+    }
+  }
+}

@@ -224,6 +224,7 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             self.success = [True] * self.num_envs
             self.end_flag = [False] * self.num_envs
             self.take_action_cnt = [0] * self.num_envs
+            self._runtime_benchmark_errors.clear()
             # Discard any writers left open by a previous (e.g. crashed or
             # unstable) batch before starting a fresh one.
             self._abort_video_writers()
@@ -675,10 +676,19 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                     )
 
         def step(self, env_idx_list, decimation=1):
+            sample_progress = getattr(self, "sample_custom_progress", None)
             meta_control_list = self.robot_manager.control_manager.pop(env_idx_list)
             for _ in range(decimation):
                 super().step(meta_control_list=meta_control_list)
                 self.sim_step(render=False)
+                if sample_progress is not None and not self._runtime_benchmark_errors:
+                    started_at = time.monotonic()
+                    try:
+                        sample_progress(env_idx_list)
+                    except Exception as error:  # Preserve evaluator faults separately from physical failures.
+                        self._runtime_benchmark_errors.append(f"{type(error).__name__}: {error}")
+                    finally:
+                        self._runtime_benchmark_overhead_s += time.monotonic() - started_at
 
         def _align_layout_success(self):
             for env_idx in range(self.num_envs):
@@ -820,7 +830,9 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 self.eval_one_episode_batch()
             else:
                 self.eval_one_episode()
+            self._assert_runtime_benchmark_valid()
             success = 0
+            progress = getattr(self, "custom_progress_report", None)
             process_scores = self.reward_manager.get_score() if hasattr(self, "get_score") else None
             # Envs flagged unstable during the episode (e.g. make_kong's
             # support-arm discard failed to knock the target tile down) are not
@@ -854,6 +866,8 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                     "success": bool(self.success[env_idx]),
                     "score": episode_score,
                 }
+                if progress is not None:
+                    self.eval_result["details"][index]["trajectory_progress"] = progress(env_idx)
                 video_path = os.path.join(self.save_dir, f"episode_{index:07d}.mp4")
                 self.save_video(env_idx, video_path, tag)
 
@@ -877,13 +891,7 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             except Exception as e:
                 print(f"[EvalEnv] persist_resume_manifest after run_eval failed: {e}")
 
-        def evaluate_episode(self):
-            """Finalize ground-truth benchmark results after runtime stops.
-
-            This method is intentionally privileged.  Policies and runtime
-            executors must not call it; the isolated benchmark evaluator calls
-            it only after all planner, verifier, and action control flow ends.
-            """
+        def _assert_runtime_benchmark_valid(self):
             if self._runtime_benchmark_errors:
                 # The policy/runtime has already stopped. Exclude this sample
                 # from benchmark totals rather than turning an evaluator fault
@@ -893,9 +901,20 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 raise RuntimeError(
                     "benchmark bookkeeping failed during runtime: " + "; ".join(self._runtime_benchmark_errors)
                 )
+
+        def evaluate_episode(self):
+            """Finalize ground-truth benchmark results after runtime stops.
+
+            This method is intentionally privileged.  Policies and runtime
+            executors must not call it; the isolated benchmark evaluator calls
+            it only after all planner, verifier, and action control flow ends.
+            """
+            self._assert_runtime_benchmark_valid()
             pre_end_flag = deepcopy(self.end_flag)
             reward_list = self.reward_manager.get_reward(final_check=True)
             results = []
+            progress = getattr(self, "custom_progress_report", None)
+            process_scores = self.reward_manager.get_score() if progress is not None else None
             for env_idx in range(self.num_envs):
                 succeeded = bool(reward_list[env_idx] > 1 - 1e-3)
                 self.success[env_idx] = succeeded
@@ -909,6 +928,10 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                         "action_budget": int(self.step_lim),
                     }
                 )
+
+                if progress is not None:
+                    results[-1]["score"] = 1.0 if succeeded else process_scores[env_idx] / 100.0
+                    results[-1]["trajectory_progress"] = progress(env_idx)
 
             changed = [env_idx for env_idx in range(self.num_envs) if self.end_flag[env_idx] != pre_end_flag[env_idx]]
             if changed:

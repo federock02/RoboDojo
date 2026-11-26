@@ -30,6 +30,7 @@ CONTACT_GAP_M = 0.006
 PENETRATION_M = 0.003
 EDGE_TOLERANCE_M = 0.003
 UPRIGHT_TOLERANCE_DEG = 10.0
+SUPPORT_TOLERANCE_DEG = 10.0
 
 
 def rotation_matrix(quaternion):
@@ -56,16 +57,26 @@ def cube_vertices(pose, side):
     return local @ rotation_matrix(quaternion).T + position
 
 
-def bottom_face(pose, side):
+def support_face(pose, side):
     rotation = rotation_matrix(pose[1])
     vertical_axis = int(np.argmax(np.abs(rotation[2])))
-    # A resting cube may use any of its six faces and any yaw.
-    if abs(rotation[2, vertical_axis]) < np.cos(np.deg2rad(10)):
-        return None
     local = np.array(list(product((-side / 2, side / 2), repeat=3)))
     bottom_sign = -np.sign(rotation[2, vertical_axis])
     local = local[np.sign(local[:, vertical_axis]) == bottom_sign]
-    return local @ rotation.T + np.asarray(pose[0]).reshape(3)
+    return (
+        local @ rotation.T + np.asarray(pose[0]).reshape(3),
+        abs(rotation[2, vertical_axis]),
+    )
+
+
+def bottom_face(pose, side):
+    # A resting cube may use any of its six faces and any yaw.
+    face, up = support_face(pose, side)
+    return face if up >= np.cos(np.deg2rad(SUPPORT_TOLERANCE_DEG)) else None
+
+
+def angle_degrees(cosine):
+    return float(np.rad2deg(np.arccos(np.clip(cosine, -1, 1))))
 
 
 def upright_cube(pose):
@@ -87,38 +98,60 @@ def supported_on_cube(upper, upper_side, lower, lower_side):
     bottom = bottom_face(upper, upper_side)
     if bottom is None:
         return False
-    rotation = rotation_matrix(lower[1])
-    vertical_axis = int(np.argmax(np.abs(rotation[2])))
-    if abs(rotation[2, vertical_axis]) < np.cos(np.deg2rad(10)):
+    gaps, lateral, up = stack_contact(bottom, lower, lower_side)
+    if up < np.cos(np.deg2rad(SUPPORT_TOLERANCE_DEG)):
         return False
-    local = (bottom - np.asarray(lower[0]).reshape(3)) @ rotation
-    gaps = (
-        local[:, vertical_axis] * np.sign(rotation[2, vertical_axis]) - lower_side / 2
-    )
-    lateral = np.delete(local, vertical_axis, axis=1)
     return bool(
         np.all((gaps >= -PENETRATION_M) & (gaps <= CONTACT_GAP_M))
         and np.all(np.abs(lateral) <= lower_side / 2 + EDGE_TOLERANCE_M)
     )
 
 
-def target_contains_cube(large, side, target_pose, target_side, target_shape):
+def stack_contact(bottom, lower, lower_side):
+    rotation = rotation_matrix(lower[1])
+    vertical_axis = int(np.argmax(np.abs(rotation[2])))
+    local = (bottom - np.asarray(lower[0]).reshape(3)) @ rotation
+    gaps = local[:, vertical_axis] * np.sign(rotation[2, vertical_axis]) - lower_side / 2
+    lateral = np.delete(local, vertical_axis, axis=1)
+    return gaps, lateral, abs(rotation[2, vertical_axis])
+
+
+def target_local_footprint(large, side, target_pose):
     target_position, target_quaternion = target_pose
     vertices = cube_vertices(large, side)
-    target_local = (
-        vertices - np.asarray(target_position).reshape(3)
-    ) @ rotation_matrix(target_quaternion)
+    target_local = (vertices - np.asarray(target_position).reshape(3)) @ rotation_matrix(target_quaternion)
+    return target_local[:, :2]
+
+
+def target_contains_cube(large, side, target_pose, target_side, target_shape):
+    target_local = target_local_footprint(large, side, target_pose)
     if target_shape == "square":
-        in_target = bool(
-            np.all(np.abs(target_local[:, :2]) <= target_side / 2 + EDGE_TOLERANCE_M)
-        )
+        in_target = bool(np.all(np.abs(target_local[:, :2]) <= target_side / 2 + EDGE_TOLERANCE_M))
     else:
         from .seeded_task_variants import target_contains_footprint
 
-        in_target = target_contains_footprint(
-            target_local[:, :2], target_side, target_shape, EDGE_TOLERANCE_M
-        )
+        in_target = target_contains_footprint(target_local[:, :2], target_side, target_shape, EDGE_TOLERANCE_M)
     return in_target
+
+
+def footprint_radius(points, shape):
+    """Smallest radius parameter of a centered marker containing the footprint."""
+    if shape in ("round", "circle"):
+        return float(np.max(np.linalg.norm(points, axis=1)))
+    if shape != "cross":
+        return float(np.max(np.abs(points)))
+    # The cross changes arms where |x+y| = |x-y|, i.e. on either axis.
+    # Within each quadrant its required radius is convex, so segment
+    # endpoints and axis crossings suffice for the entire footprint.
+    probes = list(points)
+    for a, b in product(points, repeat=2):
+        for axis in range(2):
+            if a[axis] * b[axis] < 0:
+                fraction = a[axis] / (a[axis] - b[axis])
+                probes.append(a + fraction * (b - a))
+    x, y = np.asarray(probes).T
+    u, v = np.abs(x + y) / np.sqrt(2), np.abs(x - y) / np.sqrt(2)
+    return float(np.max([np.abs(x), np.abs(y), u, v, 2 * np.minimum(u, v)]))
 
 
 def arrangement_checks(
@@ -134,15 +167,11 @@ def arrangement_checks(
     """Return final placement stages; a previous lift never invalidates a result."""
     sides = sides or {label: spec["side"] for label, spec in CUBE_SPECS.items()}
     large = poses["large_cube"]
-    in_target = target_contains_cube(
-        large, sides["large_cube"], target_pose, target_side, target_shape
-    )
+    in_target = target_contains_cube(large, sides["large_cube"], target_pose, target_side, target_shape)
     base = bool(in_target and supported_on_table(large, sides["large_cube"], table_top))
     if not stacked:
         return (base,)
-    medium = supported_on_cube(
-        poses["medium_cube"], sides["medium_cube"], large, sides["large_cube"]
-    )
+    medium = supported_on_cube(poses["medium_cube"], sides["medium_cube"], large, sides["large_cube"])
     small = supported_on_cube(
         poses["small_cube"],
         sides["small_cube"],

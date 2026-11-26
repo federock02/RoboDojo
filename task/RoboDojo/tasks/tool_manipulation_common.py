@@ -1,14 +1,10 @@
-"""Shared goal logic for the L-shaped-tool push and pull tasks.
-
-Both variants judge only the final physical state: the cube is inside the
-marked target zone, it was never lifted off the tabletop, and both arms have
-returned to their initial poses.  The tool itself is an ordinary rigid body;
-no privileged intermediate state or hidden tool-attachment check is used.
-"""
+"""Native goal, transport milestones and no-lift rule for both L-tool tasks."""
 
 from __future__ import annotations
 
 from env.reward_manager.reward_manager import RewardManager
+
+from .custom_task_progress import CustomTaskProgress
 
 CUBE_LABEL = "cube"
 TARGET_LABEL = "target_zone"
@@ -16,7 +12,7 @@ TARGET_RADIUS_M = 0.035
 MAX_CUBE_LIFT_M = 0.02
 
 
-class ToolManipulationCommon:
+class ToolManipulationCommon(CustomTaskProgress):
     """Base mixin for the push/pull tool tasks."""
 
     direction = ""
@@ -24,7 +20,9 @@ class ToolManipulationCommon:
     tool_description = "long L-shaped tool"
     target_description = "marked target zone"
     acceptance_radius_m = TARGET_RADIUS_M
-    max_cube_lift_m = MAX_CUBE_LIFT_M
+    transport_label = CUBE_LABEL
+    auxiliary_label = "l_tool"
+    max_lift_m = MAX_CUBE_LIFT_M
 
     def __init__(self, config, app, **kwargs):
         super().__init__(config, app, **kwargs)
@@ -53,15 +51,14 @@ class ToolManipulationCommon:
         ]
 
     def run_reward(self):
-        # Lifting the cube bypasses the intended tool-mediated transport.
-        self.reward_manager.query(
-            [self.reward_manager.is_lift(label=CUBE_LABEL, z_threshold=self.max_cube_lift_m)],
-            0,
-        )
-        self.reward_manager.final_check(self._final_checks())
+        self._start_custom_progress()
+        self.reward_manager.final_check([self._constraints_check(), *self._final_checks()])
 
     def get_score(self):
-        self.reward_manager.final_score([self._final_checks()], [100])
+        self._register_custom_score(
+            [self._advance(0.25), self._advance(0.50), [self._cube_at_target()]],
+            [20, 40, 75],
+        )
 
     def gen_instruction(self, env_idx):
         return [
@@ -80,8 +77,10 @@ class ToolManipulationCommon:
             "rests inside the marked zone, release the tool, and return both arms "
             "to their initial poses.\n\n"
             "## Scoring\n\n"
-            "- 0: The cube is not inside the target zone, it was lifted above the "
-            "allowed height, or the arms did not return to their initial poses.\n"
-            "- 100: The cube is inside the target zone, was never lifted, and both "
-            "arms returned to their initial poses."
+            "- 20 or 40: Reduce the closest distance to the target by at least 25% "
+            "or 50% of the initial distance, respectively, with at least 1 cm of progress.\n"
+            "- 75: Also finish with the cube inside the target zone.\n"
+            "- 100: Finish with the cube inside the target zone and both arms at home.\n"
+            "- 0: The cube rose more than 2 cm above its settled starting height, "
+            "or no progress milestone was met."
         )

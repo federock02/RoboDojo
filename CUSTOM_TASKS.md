@@ -54,3 +54,27 @@ Use the companion project's `install_seeded_variants.py` and task-specific asset
 ## Runtime integration
 
 The custom tasks rely on the registered limited-payload robot configuration, task-scoped rigid-body properties, seeded layout selection, and the RoboDojo evaluation client's runtime action and benchmark evaluation interfaces. The high-friction reset stability check is included in the layout manager.
+
+## Task catalog and evaluation
+
+`task/RoboDojo/task_catalog.json` is the task metadata source. Each custom
+entry records physical principles, acquisition status, evaluator version and
+proposed physical controls. Update an acquisition status only against
+evidence for the deployed task revision, seed and controller.
+
+Custom evaluator version `custom-progress-v2` awards 100 for full native
+success and uses the highest satisfied partial tier for unsuccessful episodes.
+The first two tiers require the closest planar target distance to drop by 25%
+or 50% of the settled start distance, with at least 1 cm of progress. Later
+tiers depend on terminal placement, orientation, payload containment or
+stack levels, depending on the task. A transient transport milestone can earn
+credit even if the object subsequently moves away from the goal. Terminal
+milestones still require the physical arrangement at evaluation.
+
+RoboDojo samples the transported object's pose after every controlled
+physics step. The no-lift rule for L-tool tasks compares peak cube center
+height with the settled start, allowing a rise of at most 2 cm. The fragile
+cube allows at most 10 degrees of top-face tilt throughout the trajectory.
+Either violation prevents full or partial credit for the corresponding task.
+Tool and pin motion summaries are available as evidence of object motion.
+They do not determine which contact moved the cube.

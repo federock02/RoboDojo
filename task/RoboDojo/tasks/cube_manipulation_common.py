@@ -1,26 +1,40 @@
-"""Native RoboDojo integration for result-only cube placement tasks."""
+"""Native RoboDojo scoring and diagnostics for cube placement tasks."""
 
 import numpy as np
+
 from env.reward_manager.reward_manager import RewardManager
 
 from .cube_manipulation_geometry import (
+    CONTACT_GAP_M,
     CUBE_SPECS,
+    EDGE_TOLERANCE_M,
+    PENETRATION_M,
+    SUPPORT_TOLERANCE_DEG,
+    UPRIGHT_TOLERANCE_DEG,
+    angle_degrees,
     arrangement_checks,
-    supported_on_cube,
-    supported_on_table,
+    footprint_radius,
+    rotation_matrix,
+    stack_contact,
+    support_face,
     target_contains_cube,
+    target_local_footprint,
     upright_cube,
 )
+from .custom_task_progress import CustomTaskProgress
 
 
-class CubeManipulationCommon:
+class CubeManipulationCommon(CustomTaskProgress):
+    transport_label = "large_cube"
     stacked = False
     upright = False
 
     def __init__(self, config, app, **kwargs):
         super().__init__(config, app, **kwargs)
         self.reward_manager = RewardManager(self.num_envs)
-        self.reward_manager.func_parser.cube_arrangement_stage = self._check_stage
+        parser = self.reward_manager.func_parser
+        parser.cube_arrangement_stage = self._check_stage
+        parser.cube_target_fit = self._cube_target_fit
         self.step_lim = 1200
 
     def _post_setup_scene(self, sim):
@@ -48,9 +62,7 @@ class CubeManipulationCommon:
         layout = self.scene_manager.layout_manager
         saved = getattr(layout, "saved_layouts", [None] * self.num_envs)[env_idx]
         variation = (saved or {}).get("Table", {}).get("task_variation", {})
-        sides = variation.get("cube_sides") or {
-            label: spec["side"] for label, spec in CUBE_SPECS.items()
-        }
+        sides = variation.get("cube_sides") or {label: spec["side"] for label, spec in CUBE_SPECS.items()}
         return (
             sides,
             variation.get("target_side", 0.26),
@@ -64,8 +76,8 @@ class CubeManipulationCommon:
         # Saved and measured coordinates are both environment-relative.
         return float(obj.default_pos[2]) - large_side / 2
 
-    def cube_diagnostic_predicates(self, env_idx):
-        """Expose independent read-only predicates without registering rewards."""
+    def physical_diagnostic_measurements(self, env_idx):
+        """Return terminal geometry checks as measured values and thresholds."""
         sides, target_side, target_shape = self._geometry(env_idx)
         layout = self.scene_manager.layout_manager
 
@@ -85,36 +97,128 @@ class CubeManipulationCommon:
             poses = [pose(label) for label in labels]
             return None if any(value is None for value in poses) else predicate(*poses)
 
-        predicates = {
-            "target_footprint": lambda: check(
-                lambda large, target: target_contains_cube(
-                    large, sides["large_cube"], target, target_side, target_shape
-                ),
+        def measurement(name, label, comparison, required, unit, read):
+            return {
+                "id": f"cube.{name}",
+                "label": label,
+                "comparison": comparison,
+                "required": required,
+                "unit": unit,
+                "measure": read,
+            }
+
+        large_side = sides["large_cube"]
+        yield measurement(
+            "target_footprint",
+            "Target radius needed to fit large cube",
+            "<=",
+            target_side / 2 + EDGE_TOLERANCE_M,
+            "m",
+            lambda: check(
+                lambda large, target: footprint_radius(target_local_footprint(large, large_side, target), target_shape),
                 "large_cube",
                 "target_zone",
             ),
-            "table_support": lambda: check(
-                lambda large: supported_on_table(
-                    large,
-                    sides["large_cube"],
-                    self._table_top(env_idx, sides["large_cube"]),
-                ),
-                "large_cube",
-            ),
-        }
+        )
         if self.upright:
-            predicates["upright"] = lambda: check(upright_cube, "large_cube")
+            yield measurement(
+                "upright",
+                "Large cube top-face tilt",
+                "<=",
+                UPRIGHT_TOLERANCE_DEG,
+                "deg",
+                lambda: check(
+                    lambda large: angle_degrees(rotation_matrix(large[1])[2, 2]),
+                    "large_cube",
+                ),
+            )
+
+        supports = [("large_cube", None)]
         if self.stacked:
-            for upper, lower in (
-                ("medium_cube", "large_cube"),
-                ("small_cube", "medium_cube"),
-            ):
-                predicates[upper + "_support"] = lambda upper=upper, lower=lower: check(
-                    lambda a, b: supported_on_cube(a, sides[upper], b, sides[lower]),
-                    upper,
-                    lower,
+            supports += [("medium_cube", "large_cube"), ("small_cube", "medium_cube")]
+
+        def contact(upper, lower):
+            a = pose(upper)
+            b = pose(lower) if lower else None
+            if a is None or (lower and b is None):
+                return {}
+            face, up = support_face(a, sides[upper])
+            values = {"tilt": angle_degrees(up)}
+            if lower:
+                gaps, lateral, lower_up = stack_contact(face, b, sides[lower])
+                values.update(
+                    support_tilt=angle_degrees(lower_up),
+                    extent=float(np.max(np.abs(lateral))),
                 )
-        return predicates
+            else:
+                gaps = face[:, 2] - self._table_top(env_idx, sides[upper])
+            return dict(values, gap=float(max(gaps)), lowest=float(min(gaps)))
+
+        for upper, lower in supports:
+            label = upper.replace("_", " ").capitalize()
+            destination = lower.replace("_", " ") if lower else "table"
+            specs = [
+                (
+                    "tilt",
+                    f"{label} resting-face tilt",
+                    "<=",
+                    SUPPORT_TOLERANCE_DEG,
+                    "deg",
+                ),
+                (
+                    "gap",
+                    f"{label} largest gap above {destination}",
+                    "<=",
+                    CONTACT_GAP_M,
+                    "m",
+                ),
+                (
+                    "lowest",
+                    f"{label} lowest gap above {destination}",
+                    ">=",
+                    -PENETRATION_M,
+                    "m",
+                ),
+            ]
+            if lower:
+                specs += [
+                    (
+                        "support_tilt",
+                        f"{destination.capitalize()} supporting-face tilt",
+                        "<=",
+                        SUPPORT_TOLERANCE_DEG,
+                        "deg",
+                    ),
+                    (
+                        "extent",
+                        f"{label} footprint radius on {destination}",
+                        "<=",
+                        sides[lower] / 2 + EDGE_TOLERANCE_M,
+                        "m",
+                    ),
+                ]
+            for key, title, comparison, required, unit in specs:
+                yield measurement(
+                    f"{upper}.{key}",
+                    title,
+                    comparison,
+                    required,
+                    unit,
+                    lambda upper=upper, lower=lower, key=key: contact(upper, lower).get(key),
+                )
+
+    def _cube_target_fit(self, args):
+        env_idx = args["env_idx"]
+        sides, target_side, target_shape = self._geometry(env_idx)
+        return float(
+            target_contains_cube(
+                self._pose(env_idx, "large_cube"),
+                sides["large_cube"],
+                self._pose(env_idx, "target_zone"),
+                target_side,
+                target_shape,
+            )
+        )
 
     def _check_stage(self, args):
         env_idx = args["env_idx"]
@@ -142,16 +246,15 @@ class CubeManipulationCommon:
         return ("cube_arrangement_stage", {"stage": index})
 
     def run_reward(self):
-        self.reward_manager.final_check([self._stage(2 if self.stacked else 0)])
+        self._start_custom_progress()
+        self.reward_manager.final_check([self._constraints_check(), self._stage(2 if self.stacked else 0)])
 
     def get_score(self):
-        # Register final-state scores rather than execution milestones.
-        count = 3 if self.stacked else 1
-        self.reward_manager.final_score(
-            [[self._stage(index)] for index in range(count)],
-            [30, 65, 100] if self.stacked else [100],
-            score_mode="by_count",
-        )
+        stages = [self._advance(0.25), self._advance(0.50)]
+        if self.stacked:
+            self._register_custom_score([*stages, [self._stage(0)], [self._stage(1)]], [15, 30, 50, 75])
+        else:
+            self._register_custom_score([*stages, [("cube_target_fit", {})]], [25, 50, 75])
 
     def gen_instruction(self, env_idx):
         if self.stacked:
