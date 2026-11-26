@@ -86,3 +86,9 @@ before acquisition. The contact criterion is a proxy for tool-mediated motion.
 
 Each custom result records the milestone labels, cumulative points and which
 tiers received credit, alongside the official score and success flag.
+
+Every custom task requires both end effectors to return within RoboDojo's
+default home tolerances for full credit. Each position coordinate may differ
+by at most 0.15 m and orientation by at most 20 degrees. Basket and cube
+evaluators with this requirement are identified as `custom-progress-home-v1`.
+Intermediate milestones retain their existing conditions and point values.

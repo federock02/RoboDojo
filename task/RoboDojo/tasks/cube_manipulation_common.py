@@ -247,7 +247,9 @@ class CubeManipulationCommon(CustomTaskProgress):
 
     def run_reward(self):
         self._start_custom_progress()
-        self.reward_manager.final_check([self._constraints_check(), self._stage(2 if self.stacked else 0)])
+        self.reward_manager.final_check(
+            [self._constraints_check(), self._stage(2 if self.stacked else 0), self._arms_home_check()]
+        )
 
     def get_score(self):
         if self.stacked:
@@ -268,6 +270,6 @@ class CubeManipulationCommon(CustomTaskProgress):
     def gen_instruction(self, env_idx):
         if self.stacked:
             return [
-                "Stack the three cubes in the marked target zone, with the largest cube at the bottom, the medium cube in the middle, and the smallest cube on top."
+                "Stack the three cubes in the marked target zone, with the largest cube at the bottom, the medium cube in the middle, and the smallest cube on top. Then return both arms to their starting poses."
             ]
-        return ["Move the large cube to the marked target zone."]
+        return ["Move the large cube to the marked target zone, then return both arms to their starting poses."]

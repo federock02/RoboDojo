@@ -118,6 +118,9 @@ class CustomTaskProgress:
     def _constraints_check():
         return ("custom_transport_constraints", {})
 
+    def _arms_home_check(self):
+        return self.reward_manager.all_robot_back_to_origin()
+
     def _register_custom_score(self, stages):
         self._progress_tiers = stages
 

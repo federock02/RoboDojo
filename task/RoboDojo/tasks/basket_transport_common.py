@@ -46,6 +46,7 @@ class BasketTransportCommon(CustomTaskProgress):
             self._basket_upright(),
             *self._payload_reloaded(),
             self.reward_manager.is_all_gripper_open(open_threshold=0.8),
+            self._arms_home_check(),
         ]
 
     def run_reward(self):
@@ -72,4 +73,4 @@ class BasketTransportCommon(CustomTaskProgress):
         instruction = "Move the shopping basket to the marked target zone"
         if self.payload_labels:
             instruction += " with all objects inside"
-        return [instruction + "."]
+        return [instruction + ", then return both arms to their starting poses."]

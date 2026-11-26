@@ -51,7 +51,7 @@ class ToolManipulationCommon(CustomTaskProgress):
     def _final_checks(self):
         return [
             self._cube_at_target(),
-            self.reward_manager.all_robot_back_to_origin(),
+            self._arms_home_check(),
         ]
 
     def _tool_contact_view(self, env_idx):

@@ -23,7 +23,7 @@
         "planar transport"
       ],
       "acquisition_status": "previously_acquired_revalidation_required",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-progress-home-v1",
       "controls": {
         "object": "basket",
         "negative": "Move the released empty grippers along the transport route without contacting the basket. The basket stays at its start.",
@@ -40,7 +40,7 @@
         "grasping"
       ],
       "acquisition_status": "pending_validation",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-progress-home-v1",
       "controls": {
         "object": "basket",
         "negative": "Read back the pad and basket materials. Apply a matched low-height push with and without the high-friction pad and compare directed travel.",
@@ -58,7 +58,7 @@
         "containment"
       ],
       "acquisition_status": "previously_acquired_revalidation_required",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-progress-home-v1",
       "controls": {
         "object": "basket",
         "negative": "Apply matched extraction motions to the fixed cube and a free payload. Measure each motion relative to the basket.",
@@ -76,7 +76,7 @@
         "friction"
       ],
       "acquisition_status": "previously_acquired_revalidation_required",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-progress-home-v1",
       "controls": {
         "object": "basket",
         "negative": "Attempt a loaded lift with the intended grip and calibrated load budget. Compare height with an empty or unloaded basket.",
@@ -94,7 +94,7 @@
         "containment"
       ],
       "acquisition_status": "pending_validation",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-progress-home-v1",
       "controls": {
         "object": "basket",
         "negative": "Read back the pad and basket materials. Apply a matched low-height push with and without the high-friction pad and compare directed travel.",
@@ -112,7 +112,7 @@
         "friction"
       ],
       "acquisition_status": "previously_acquired_revalidation_required",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-progress-home-v1",
       "controls": {
         "object": "basket",
         "negative": "Execute a matched loaded lift and tabletop push before unloading. Record lift and directed travel relative to the unloaded controls.",
@@ -130,7 +130,7 @@
         "grasping"
       ],
       "acquisition_status": "previously_acquired_revalidation_required",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-progress-home-v1",
       "controls": {
         "object": "basket",
         "negative": "Transport the basket but leave one removable payload out. The evaluator must withhold full success.",
@@ -148,7 +148,7 @@
         "containment"
       ],
       "acquisition_status": "pending_validation",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-progress-home-v1",
       "controls": {
         "object": "basket",
         "negative": "Read back the pad and basket materials. Apply a matched low-height push with and without the high-friction pad and compare directed travel.",
@@ -166,7 +166,7 @@
         "placement stability"
       ],
       "acquisition_status": "previously_acquired_revalidation_required",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-progress-home-v1",
       "controls": {
         "object": "large_cube",
         "negative": "Build one correct level and omit or misplace the top cube. Check that the intermediate score is awarded.",
@@ -184,7 +184,7 @@
         "planar transport"
       ],
       "acquisition_status": "pending_validation",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-progress-home-v1",
       "controls": {
         "object": "large_cube",
         "negative": "Read back the pad and cube materials. Compare directed distance under a matched low-height push on the standard scene.",
@@ -201,7 +201,7 @@
         "placement stability"
       ],
       "acquisition_status": "previously_acquired_revalidation_required",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-progress-home-v1",
       "controls": {
         "object": "large_cube",
         "negative": "Reach the target XY while holding the cube visibly above the support tolerance. The evaluator must withhold full success.",
@@ -218,7 +218,7 @@
         "clearance"
       ],
       "acquisition_status": "pending_validation",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-progress-home-v1",
       "controls": {
         "object": "large_cube",
         "negative": "Push and try the shallow-fixture tipping motion before lifting clear of the peg.",
@@ -236,7 +236,7 @@
         "sequencing"
       ],
       "acquisition_status": "pending_validation",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-progress-home-v1",
       "controls": {
         "object": "large_cube",
         "negative": "Attempt direct lateral transport with the pin seated. Compare with a matched push after the pin is extracted.",
@@ -253,7 +253,7 @@
         "clearance"
       ],
       "acquisition_status": "previously_acquired_revalidation_required",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-progress-home-v1",
       "controls": {
         "object": "large_cube",
         "negative": "Apply a low-height lateral push across the lip; record whether tipping gives a valid bypass.",
@@ -270,7 +270,7 @@
         "clearance"
       ],
       "acquisition_status": "pending_validation",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-progress-home-v1",
       "controls": {
         "object": "large_cube",
         "negative": "Try the low-height lateral and tipping motions that could bypass the shallow fixture.",
@@ -288,7 +288,7 @@
         "orientation constraint"
       ],
       "acquisition_status": "pending_validation",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-progress-home-v1",
       "controls": {
         "object": "large_cube",
         "negative": "Tip more than 10 degrees, then return the cube upright at the goal. The recorded trajectory must invalidate success.",
@@ -342,7 +342,7 @@
         "grasping"
       ],
       "acquisition_status": "pending_validation",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-progress-home-v1",
       "controls": {
         "object": "basket",
         "negative": "Push laterally at the starting height through an enclosing lip; compare with the unmodified basket.",
@@ -361,7 +361,7 @@
         "containment"
       ],
       "acquisition_status": "pending_validation",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-progress-home-v1",
       "controls": {
         "object": "basket",
         "negative": "Attempt a lateral push and a loaded lift; compare with the flat and unloaded variants.",
