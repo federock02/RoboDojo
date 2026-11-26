@@ -404,11 +404,12 @@
         "controlled contact"
       ],
       "acquisition_status": "pending_validation",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-l-tool-contact-v1",
       "controls": {
         "object": "cube",
-        "negative": "Try direct gripper transport without using the tool across the near/far band. Check a separate lift-and-return trajectory with the grippers home.",
-        "positive": "Grasp the L-tool handle, seat the crossbar on the correct cube face for pulling, translate the cube within the marker without lifting it, release the tool and return both arms home."
+        "negative": "Attempt direct gripper transport and finish with both arms home. Record terminal target distance and zero tool\u2013cube contact progress. Separate a physical hand-only placement from evaluator rejection.",
+        "positive": "Seat the crossbar for pulling, move the cube to the target with the tool, release it, and return both arms home.",
+        "hybrid": "Reposition the cube with a hand lift during a tool-assisted trajectory when reachable. Verify full success, tool contact progress and a recorded lift above 2 cm."
       }
     },
     "tool_push_cube": {
@@ -423,11 +424,12 @@
         "controlled contact"
       ],
       "acquisition_status": "pending_validation",
-      "evaluator_version": "custom-progress-v2",
+      "evaluator_version": "custom-l-tool-contact-v1",
       "controls": {
         "object": "cube",
-        "negative": "Try direct gripper transport without using the tool across the near/far band. Check a separate lift-and-return trajectory with the grippers home.",
-        "positive": "Grasp the L-tool handle, seat the crossbar on the correct cube face for pushing, translate the cube within the marker without lifting it, release the tool and return both arms home."
+        "negative": "Attempt direct gripper transport and finish with both arms home. Record terminal target distance and zero tool\u2013cube contact progress. Separate a physical hand-only placement from evaluator rejection.",
+        "positive": "Seat the crossbar for pushing, move the cube to the target with the tool, release it, and return both arms home.",
+        "hybrid": "Reposition the cube with a hand lift during a tool-assisted trajectory when reachable. Verify full success, tool contact progress and a recorded lift above 2 cm."
       }
     }
   }

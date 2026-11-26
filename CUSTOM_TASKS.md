@@ -27,7 +27,8 @@ end and a raised handle at the near end. In `tool_push_cube` the cube starts
 near the robot and the target is beyond the arms' reach; the agent pushes the
 cube with the crossbar. In `tool_pull_cube` the cube starts beyond reach and the
 target is near; the long arm passes beside the cube so the crossbar hooks its
-far face and the agent pulls it back. The cube must never be lifted above 2 cm.
+far face and the agent pulls it back. The agent may also reposition or lift
+the cube by hand during either task.
 The checked-in asset is `task/RoboDojo/custom_assets/l_tool/00000/`; regenerate
 it with `python scripts/custom_tasks/l_tool_asset.py --output
 task/RoboDojo/custom_assets/l_tool/00000`.
@@ -72,12 +73,16 @@ credit even if the object subsequently moves away from the goal. Terminal
 milestones still require the physical arrangement at evaluation.
 
 RoboDojo samples the transported object's pose after every controlled
-physics step. The no-lift rule for L-tool tasks compares peak cube center
-height with the settled start, allowing a rise of at most 2 cm. The fragile
-cube allows at most 10 degrees of top-face tilt throughout the trajectory.
-Either violation prevents full or partial credit for the corresponding task.
-Tool and pin motion summaries are available as evidence of object motion.
-They do not determine which contact moved the cube.
+physics step. The fragile cube allows at most 10 degrees of top-face tilt
+throughout the trajectory. Tool and pin motion summaries remain available.
+
+The L-tool evaluator version `custom-l-tool-contact-v1` requires the cube on
+target, the arms at home, and at least 1 cm of net target approach accumulated
+on steps with a nonzero filtered L-tool–cube contact impulse. It records peak
+cube rise for diagnosis. Hand lifts carry no penalty. An isolated hand-only
+trial must keep the tool out of contact and leave the cube outside the target.
+If the hands can reach the target with the cube, revise the scene and retest it
+before acquisition. The contact criterion is a proxy for tool-mediated motion.
 
 Each custom result records the milestone labels, cumulative points and which
 tiers received credit, alongside the official score and success flag.

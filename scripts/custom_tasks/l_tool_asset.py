@@ -99,7 +99,12 @@ def l_tool_usd() -> str:
         "        }\n"
         "    }\n"
     )
-    return f'#usda 1.0\n( defaultPrim = "LTool" )\ndef Xform "LTool" {{\n{arm}{crossbar}{handle}{looks}}}\n'
+    return (
+        '#usda 1.0\n( defaultPrim = "LTool" )\n'
+        'def Xform "LTool" (prepend apiSchemas = ["PhysxContactReportAPI"]) {\n'
+        "    float physxContactReport:threshold = 0\n"
+        f"{arm}{crossbar}{handle}{looks}}}\n"
+    )
 
 
 def l_tool_metadata() -> dict:
