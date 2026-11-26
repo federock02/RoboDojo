@@ -118,21 +118,26 @@ class CustomTaskProgress:
     def _constraints_check():
         return ("custom_transport_constraints", {})
 
-    def _register_custom_score(self, stages, points):
+    def _register_custom_score(self, stages):
+        self._progress_tiers = [(label, points) for label, points, _ in stages]
         # On failure only the highest satisfied tier is awarded. Every tier
         # includes all earlier predicates, and path violations invalidate it.
         checks = [self._constraints_check()]
         nested = []
-        for stage in stages:
+        for _, _, stage in stages:
             checks = [*checks, *stage]
             nested.append(checks)
-        self.reward_manager.final_score(nested, points, score_mode="by_count")
+        self.reward_manager.final_score(nested, [points for _, points in self._progress_tiers], score_mode="by_count")
 
     @staticmethod
-    def _advance(fraction):
-        return [("custom_transport_milestone", {"fraction": fraction})]
+    def _advance_tier(fraction, points):
+        return (
+            f"Reduce target distance by {fraction:.0%} and at least 1 cm",
+            points,
+            [("custom_transport_milestone", {"fraction": fraction})],
+        )
 
-    def custom_progress_report(self, env_idx):
+    def custom_progress_report(self, env_idx, *, score=None):
         history = self._transport_history.get(env_idx)
         if history is None:
             return None
@@ -147,6 +152,11 @@ class CustomTaskProgress:
             "max_tilt_deg": self.max_tilt_deg,
         }
 
+        if score is not None:
+            report["credited_milestones"] = [
+                {"label": label, "points": points, "credited": score * 100 >= points}
+                for label, points in self._progress_tiers
+            ]
         if self.auxiliary_label:
             _, displacement, rise = self._auxiliary_motion[env_idx]
             report["auxiliary_object"] = self.auxiliary_label

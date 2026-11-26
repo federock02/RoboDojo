@@ -250,11 +250,20 @@ class CubeManipulationCommon(CustomTaskProgress):
         self.reward_manager.final_check([self._constraints_check(), self._stage(2 if self.stacked else 0)])
 
     def get_score(self):
-        stages = [self._advance(0.25), self._advance(0.50)]
         if self.stacked:
-            self._register_custom_score([*stages, [self._stage(0)], [self._stage(1)]], [15, 30, 50, 75])
+            stages = [
+                self._advance_tier(0.25, 15),
+                self._advance_tier(0.50, 30),
+                ("Base cube is placed and supported", 50, [self._stage(0)]),
+                ("Middle cube is supported on the base", 75, [self._stage(1)]),
+            ]
         else:
-            self._register_custom_score([*stages, [("cube_target_fit", {})]], [25, 50, 75])
+            stages = [
+                self._advance_tier(0.25, 25),
+                self._advance_tier(0.50, 50),
+                ("Large cube footprint fits inside the target", 75, [("cube_target_fit", {})]),
+            ]
+        self._register_custom_score(stages)
 
     def gen_instruction(self, env_idx):
         if self.stacked:

@@ -867,7 +867,7 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                     "score": episode_score,
                 }
                 if progress is not None:
-                    self.eval_result["details"][index]["trajectory_progress"] = progress(env_idx)
+                    self.eval_result["details"][index]["trajectory_progress"] = progress(env_idx, score=episode_score)
                 video_path = os.path.join(self.save_dir, f"episode_{index:07d}.mp4")
                 self.save_video(env_idx, video_path, tag)
 
@@ -931,7 +931,7 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
 
                 if progress is not None:
                     results[-1]["score"] = 1.0 if succeeded else process_scores[env_idx] / 100.0
-                    results[-1]["trajectory_progress"] = progress(env_idx)
+                    results[-1]["trajectory_progress"] = progress(env_idx, score=results[-1]["score"])
 
             changed = [env_idx for env_idx in range(self.num_envs) if self.end_flag[env_idx] != pre_end_flag[env_idx]]
             if changed:

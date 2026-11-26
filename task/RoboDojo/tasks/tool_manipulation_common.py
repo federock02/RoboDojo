@@ -56,8 +56,11 @@ class ToolManipulationCommon(CustomTaskProgress):
 
     def get_score(self):
         self._register_custom_score(
-            [self._advance(0.25), self._advance(0.50), [self._cube_at_target()]],
-            [20, 40, 75],
+            [
+                self._advance_tier(0.25, 20),
+                self._advance_tier(0.50, 40),
+                ("Cube finishes at target", 75, [self._cube_at_target()]),
+            ],
         )
 
     def gen_instruction(self, env_idx):

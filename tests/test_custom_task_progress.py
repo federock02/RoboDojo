@@ -5,10 +5,31 @@ import unittest
 
 import numpy as np
 
-from task.RoboDojo.tasks.custom_task_progress import CustomTaskProgress
+from task.RoboDojo.tasks.custom_task_progress import CustomTaskProgress, TransportHistory
 
 
 class ProgressTest(unittest.TestCase):
+    def test_tiers_are_nested_and_report_credit_from_native_score(self):
+        progress = CustomTaskProgress()
+        progress._transport_history = {0: TransportHistory(0.1, 0.4, 0.16)}
+        captured = []
+        progress.reward_manager = SimpleNamespace(
+            final_score=lambda checks, points, score_mode: captured.append((checks, points, score_mode))
+        )
+        progress._register_custom_score(
+            [
+                progress._advance_tier(0.25, 20),
+                progress._advance_tier(0.50, 40),
+            ]
+        )
+        checks, points, mode = captured[0]
+        self.assertEqual(checks[1][:-1], checks[0])
+        self.assertEqual(checks[0][0], progress._constraints_check())
+        self.assertEqual(points, [20, 40])
+        self.assertEqual(mode, "by_count")
+        stages = progress.custom_progress_report(0, score=0.20)["credited_milestones"]
+        self.assertEqual([stage["credited"] for stage in stages], [True, False])
+
     def test_path_violation_survives_terminal_recovery_and_clears_on_reset(self):
         for axis in ("lift", "tilt"):
             with self.subTest(axis=axis):

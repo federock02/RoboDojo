@@ -53,13 +53,20 @@ class BasketTransportCommon(CustomTaskProgress):
         self.reward_manager.final_check(self._final_checks())
 
     def get_score(self):
-        stages = [self._advance(0.25), self._advance(0.50), [self._basket_at_target()]]
-        points = [20, 40, 60]
+        stages = [
+            self._advance_tier(0.25, 20),
+            self._advance_tier(0.50, 40),
+            ("Basket finishes at target", 60, [self._basket_at_target()]),
+        ]
         upright = [self._basket_upright()]
-        if not self.payload_labels:
-            self._register_custom_score([*stages, upright], [*points, 80])
-            return
-        self._register_custom_score([*stages, upright, self._payload_reloaded()], [*points, 70, 85])
+        if self.payload_labels:
+            stages += [
+                ("Basket finishes upright", 70, upright),
+                ("All original payloads are inside", 85, self._payload_reloaded()),
+            ]
+        else:
+            stages.append(("Basket finishes upright", 80, upright))
+        self._register_custom_score(stages)
 
     def gen_instruction(self, env_idx):
         instruction = "Move the shopping basket to the marked target zone"

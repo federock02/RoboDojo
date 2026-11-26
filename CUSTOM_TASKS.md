@@ -78,3 +78,6 @@ cube allows at most 10 degrees of top-face tilt throughout the trajectory.
 Either violation prevents full or partial credit for the corresponding task.
 Tool and pin motion summaries are available as evidence of object motion.
 They do not determine which contact moved the cube.
+
+Each custom result records the milestone labels, cumulative points and which
+tiers received credit, alongside the official score and success flag.
