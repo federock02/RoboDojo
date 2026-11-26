@@ -833,7 +833,10 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             self._assert_runtime_benchmark_valid()
             success = 0
             progress = getattr(self, "custom_progress_report", None)
-            process_scores = self.reward_manager.get_score() if hasattr(self, "get_score") else None
+            custom_score = getattr(self, "custom_episode_score", None)
+            process_scores = (
+                self.reward_manager.get_score() if custom_score is None and hasattr(self, "get_score") else None
+            )
             # Envs flagged unstable during the episode (e.g. make_kong's
             # support-arm discard failed to knock the target tile down) are not
             # valid eval samples: skip their videos and exclude them from the
@@ -852,6 +855,9 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                     episode_score = 1.0
                     success += 1
                     tag = "success"
+                elif custom_score is not None:
+                    episode_score = custom_score(env_idx, succeeded=False)
+                    self.total_score += episode_score
                 elif process_scores is not None:
                     episode_score = process_scores[env_idx] / 100.0
                     self.total_score += episode_score
@@ -914,7 +920,7 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             reward_list = self.reward_manager.get_reward(final_check=True)
             results = []
             progress = getattr(self, "custom_progress_report", None)
-            process_scores = self.reward_manager.get_score() if progress is not None else None
+            custom_score = getattr(self, "custom_episode_score", None)
             for env_idx in range(self.num_envs):
                 succeeded = bool(reward_list[env_idx] > 1 - 1e-3)
                 self.success[env_idx] = succeeded
@@ -930,7 +936,7 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 )
 
                 if progress is not None:
-                    results[-1]["score"] = 1.0 if succeeded else process_scores[env_idx] / 100.0
+                    results[-1]["score"] = custom_score(env_idx, succeeded)
                     results[-1]["trajectory_progress"] = progress(env_idx, score=results[-1]["score"])
 
             changed = [env_idx for env_idx in range(self.num_envs) if self.end_flag[env_idx] != pre_end_flag[env_idx]]

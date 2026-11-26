@@ -12,23 +12,32 @@ class ProgressTest(unittest.TestCase):
     def test_tiers_are_nested_and_report_credit_from_native_score(self):
         progress = CustomTaskProgress()
         progress._transport_history = {0: TransportHistory(0.1, 0.4, 0.16)}
-        captured = []
-        progress.reward_manager = SimpleNamespace(
-            final_score=lambda checks, points, score_mode: captured.append((checks, points, score_mode))
-        )
+        at_target = True
+
+        def check_once(check, env_idx):
+            name, args = check
+            if name == "at_target":
+                return at_target
+            return {
+                "custom_transport_constraints": progress._custom_transport_constraints,
+                "custom_transport_milestone": progress._custom_transport_milestone,
+            }[name]({**args, "env_idx": env_idx})
+
+        progress.reward_manager = SimpleNamespace(check_once=check_once)
         progress._register_custom_score(
             [
                 progress._advance_tier(0.25, 20),
                 progress._advance_tier(0.50, 40),
+                ("Finish at target", 75, [("at_target", {})]),
             ]
         )
-        checks, points, mode = captured[0]
-        self.assertEqual(checks[1][:-1], checks[0])
-        self.assertEqual(checks[0][0], progress._constraints_check())
-        self.assertEqual(points, [20, 40])
-        self.assertEqual(mode, "by_count")
-        stages = progress.custom_progress_report(0, score=0.20)["credited_milestones"]
-        self.assertEqual([stage["credited"] for stage in stages], [True, False])
+        self.assertEqual(progress.custom_episode_score(0, False), 0.75)
+        at_target = False
+        score = progress.custom_episode_score(0, False)
+        self.assertEqual(score, 0.40)
+        stages = progress.custom_progress_report(0, score=score)["credited_milestones"]
+        self.assertEqual([stage["credited"] for stage in stages], [True, True, False])
+        self.assertEqual(progress.custom_episode_score(0, True), 1.0)
 
     def test_path_violation_survives_terminal_recovery_and_clears_on_reset(self):
         for axis in ("lift", "tilt"):

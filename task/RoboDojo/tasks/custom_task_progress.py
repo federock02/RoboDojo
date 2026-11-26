@@ -119,15 +119,21 @@ class CustomTaskProgress:
         return ("custom_transport_constraints", {})
 
     def _register_custom_score(self, stages):
-        self._progress_tiers = [(label, points) for label, points, _ in stages]
-        # On failure only the highest satisfied tier is awarded. Every tier
-        # includes all earlier predicates, and path violations invalidate it.
-        checks = [self._constraints_check()]
-        nested = []
-        for _, _, stage in stages:
-            checks = [*checks, *stage]
-            nested.append(checks)
-        self.reward_manager.final_score(nested, [points for _, points in self._progress_tiers], score_mode="by_count")
+        self._progress_tiers = stages
+
+    def custom_episode_score(self, env_idx, succeeded):
+        if succeeded:
+            return 1.0
+        if not self.reward_manager.check_once(self._constraints_check(), env_idx):
+            return 0.0
+        # Re-evaluate terminal predicates only when scoring this result.
+        # Native batch evaluation can inspect rewards while other envs run.
+        score = 0.0
+        for _, points, checks in self._progress_tiers:
+            if not all(self.reward_manager.check_once(check, env_idx) for check in checks):
+                break
+            score = points / 100.0
+        return score
 
     @staticmethod
     def _advance_tier(fraction, points):
@@ -155,7 +161,7 @@ class CustomTaskProgress:
         if score is not None:
             report["credited_milestones"] = [
                 {"label": label, "points": points, "credited": score * 100 >= points}
-                for label, points in self._progress_tiers
+                for label, points, _ in self._progress_tiers
             ]
         if self.auxiliary_label:
             _, displacement, rise = self._auxiliary_motion[env_idx]
